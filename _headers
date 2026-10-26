@@ -1,0 +1,21 @@
+# ==============================================================================
+# Cloudflare Pages Custom Headers Configuration
+# Tối ưu hóa phân phối nội dung trên mạng Edge CDN & Bảo mật
+# ==============================================================================
+
+# 1. Tối ưu Cache cho toàn bộ tài nguyên tĩnh (CSS, JS, Fonts, Ảnh)
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# 2. Tối ưu bộ nhớ đệm Edge Cache cho style và script (Cache 7 ngày)
+/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+# 3. HTML luôn kiểm tra mới nhất để cập nhật tính năng
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

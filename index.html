@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QR POS - Đặt món tại bàn</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Thanh Header trên cùng -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-icon">☕</div>
+      <div>
+        <h1 class="brand-title">Cloud Coffee & Tea</h1>
+        <p class="brand-sub">Hệ thống gọi món Cloudflare Edge</p>
+      </div>
+    </div>
+    <div class="table-badge" id="tableBadge">
+      <span class="badge-dot"></span>
+      <span id="tableLabel">Bàn 01</span>
+    </div>
+  </header>
+
+  <!-- Banner thông báo quét mã QR thành công -->
+  <div class="welcome-banner">
+    <div class="banner-text">
+      <strong>👋 Xin chào quý khách!</strong>
+      <p>Quý khách đang ngồi tại <b id="currentTableText">Bàn 01</b>. Vui lòng chọn món bên dưới.</p>
+    </div>
+  </div>
+
+  <!-- Thanh lọc Danh mục món ăn -->
+  <nav class="category-nav" id="categoryNav">
+    <button class="cat-btn active" data-category="all">Tất cả</button>
+    <button class="cat-btn" data-category="coffee">Cà phê</button>
+    <button class="cat-btn" data-category="tea">Trà trái cây</button>
+    <button class="cat-btn" data-category="milktea">Trà sữa</button>
+    <button class="cat-btn" data-category="snack">Ăn vặt</button>
+  </nav>
+
+  <!-- Danh sách món ăn -->
+  <main class="menu-container">
+    <div class="menu-grid" id="menuGrid">
+      <!-- Món ăn sẽ được render tự động từ app.js -->
+    </div>
+  </main>
+
+  <!-- Thanh Giỏ hàng nổi ở đáy màn hình (Mobile Bottom Bar) -->
+  <footer class="cart-bar" id="cartBar">
+    <div class="cart-info">
+      <div class="cart-count-badge" id="cartCountBadge">0 món</div>
+      <div class="cart-total-price" id="cartTotalPrice">0đ</div>
+    </div>
+    <button class="btn-checkout" id="btnOpenCart">
+      <span>Xem giỏ hàng</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </footer>
+
+  <!-- Modal Giỏ hàng chi tiết -->
+  <div class="modal-overlay" id="cartModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Giỏ hàng của bạn (<span id="modalTableNumber">Bàn 01</span>)</h3>
+        <button class="btn-close" id="btnCloseCart">&times;</button>
+      </div>
+      
+      <div class="cart-items-list" id="cartItemsList">
+        <!-- Các món đã chọn sẽ hiện ở đây -->
+      </div>
+
+      <div class="modal-summary">
+        <div class="summary-row">
+          <span>Tạm tính:</span>
+          <span id="subTotalText">0đ</span>
+        </div>
+        <div class="summary-row font-bold">
+          <span>Tổng thanh toán:</span>
+          <span class="total-highlight" id="finalTotalText">0đ</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-primary" id="btnSubmitOrder">🚀 Gửi đơn xuống Bếp</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Thông báo Đặt món thành công -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal-content text-center">
+      <div class="success-icon">🎉</div>
+      <h3>Đã gửi đơn thành công!</h3>
+      <p>Nhà bếp đã nhận được order của <b id="successTableText">Bàn 01</b>. Đồ uống sẽ được phục vụ trong ít phút.</p>
+      <button class="btn-primary" id="btnCloseSuccess">Tiếp tục gọi món</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

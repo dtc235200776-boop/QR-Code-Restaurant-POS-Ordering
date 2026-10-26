@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Màn hình Bếp & Thu ngân - Cloud POS</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="kitchen-body">
+  <!-- Header Bếp -->
+  <header class="kitchen-header">
+    <div class="brand">
+      <div class="logo-icon">🍳</div>
+      <div>
+        <h1 class="brand-title">MÀN HÌNH BẾP & QUẦY PHA CHẾ (KDS)</h1>
+        <p class="brand-sub">Đồng bộ đơn hàng thời gian thực qua Cloudflare Edge</p>
+      </div>
+    </div>
+    <div class="kitchen-stats">
+      <span class="live-indicator"><span class="blink-dot"></span> ĐANG KẾT NỐI REALTIME</span>
+      <button class="btn-clear-history" id="btnClearHistory">Xóa lịch sử đơn</button>
+    </div>
+  </header>
+
+  <!-- Thanh tóm tắt nhanh -->
+  <div class="kitchen-dashboard-bar">
+    <div class="stat-card">
+      <span class="stat-num" id="pendingCount">0</span>
+      <span class="stat-label">Đơn chờ pha chế</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" id="completedCount">0</span>
+      <span class="stat-label">Đơn đã hoàn thành</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num highlight" id="totalRevenue">0đ</span>
+      <span class="stat-label">Tổng doanh thu ca</span>
+    </div>
+  </div>
+
+  <!-- Danh sách đơn hàng nhận được -->
+  <main class="kitchen-container">
+    <div class="orders-grid" id="ordersGrid">
+      <!-- Thẻ đơn hàng của các bàn sẽ tự động nhảy vào đây khi khách bấm đặt -->
+    </div>
+    <div class="empty-state" id="emptyOrdersNotice">
+      <div class="empty-icon">🍽️</div>
+      <h3>Chưa có đơn hàng nào</h3>
+      <p>Khi khách hàng quét mã QR tại bàn và bấm "Gửi đơn xuống Bếp", đơn hàng sẽ tự động hiện lên đây.</p>
+    </div>
+  </main>
+
+  <script src="kitchen.js"></script>
+</body>
+</html>
