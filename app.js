@@ -1,231 +1,169 @@
-/**
- * Cloudflare QR POS - Client App Logic
- * Xử lý logic chọn món, giỏ hàng và gửi order
- */
-
-// 1. DỮ LIỆU THỰC ĐƠN (MENU DATA)
-const MENU_ITEMS = [
-  { id: 1, name: "Cà phê Sữa đá", category: "coffee", price: 29000, desc: "Cà phê Robusta Đắk Lắk đậm đà hòa quyện sữa đặc ngọt béo", icon: "☕" },
-  { id: 2, name: "Bạc xỉu 3 tầng", category: "coffee", price: 32000, desc: "Nhiều sữa ít cà phê, béo ngậy thơm ngon chuẩn vị Sài Gòn", icon: "🥛" },
-  { id: 3, name: "Cà phê Muối Huế", category: "coffee", price: 35000, desc: "Vị đắng thơm kết hợp lớp kem muối béo mặn độc đáo", icon: "🧂" },
-  { id: 4, name: "Trà Đào Cam Sả", category: "tea", price: 39000, desc: "Thanh mát giải nhiệt với miếng đào giòn và hương sả tự nhiên", icon: "🍑" },
-  { id: 5, name: "Trà Dâu Tằm Macchiato", category: "tea", price: 42000, desc: "Dâu tằm tươi chua ngọt kết hợp kem cheese bồng bềnh", icon: "🍓" },
-  { id: 6, name: "Trà Sữa Trân Châu Đường Đen", category: "milktea", price: 45000, desc: "Trân châu dẻo dai nấu đường đen thơm phức cùng sữa tươi", icon: "🧋" },
-  { id: 7, name: "Trà Sữa Oolong Nướng", category: "milktea", price: 40000, desc: "Hương trà oolong nướng khói đậm đà, vị ngọt thanh", icon: "🧋" },
-  { id: 8, name: "Bánh Mì Chảo Đặc Biệt", category: "snack", price: 49000, desc: "Trứng ốp la, pate béo ngậy, xúc xích và bánh mì giòn rụm", icon: "🍳" },
-  { id: 9, name: "Khoai Tây Chiên Lắc Phô Mai", category: "snack", price: 35000, desc: "Khoai tây chiên vàng giòn rụm phủ lớp bột phô mai thơm lừng", icon: "🍟" },
-  { id: 10, name: "Bánh Croissant Bơ Tỏi", category: "snack", price: 32000, desc: "Bánh sừng bò ngàn lớp thơm nức mùi bơ tỏi lá mùi tây", icon: "🥐" }
+let MENU_ITEMS = [
+  { id: 1, section: 'food', category: 'main', name: 'Cơm tấm sườn bì chả', price: 59000, desc: 'Sườn nướng, bì, chả trứng và nước mắm', icon: '🍛' },
+  { id: 2, section: 'food', category: 'main', name: 'Cơm gà sốt mắm tỏi', price: 55000, desc: 'Đùi gà chiên giòn, cơm nóng và dưa góp', icon: '🍗' },
+  { id: 3, section: 'food', category: 'main', name: 'Bò lúc lắc khoai tây', price: 79000, desc: 'Bò mềm xào rau củ, ăn kèm khoai tây', icon: '🥩' },
+  { id: 4, section: 'food', category: 'main', name: 'Mì xào hải sản', price: 69000, desc: 'Mì xào tôm mực cùng rau củ tươi', icon: '🍜' },
+  { id: 5, section: 'food', category: 'main', name: 'Phở bò tái', price: 59000, desc: 'Nước dùng ninh xương, bánh phở mềm', icon: '🍲' },
+  { id: 6, section: 'food', category: 'main', name: 'Bún bò Huế', price: 62000, desc: 'Bò, chả cua và nước dùng sả ớt', icon: '🍜' },
+  { id: 7, section: 'food', category: 'appetizer', name: 'Gỏi cuốn tôm thịt (2 cuốn)', price: 39000, desc: 'Rau tươi, tôm thịt và nước chấm', icon: '🥗' },
+  { id: 8, section: 'food', category: 'appetizer', name: 'Khoai tây chiên phô mai', price: 35000, desc: 'Khoai vàng giòn lắc phô mai', icon: '🍟' },
+  { id: 9, section: 'food', category: 'appetizer', name: 'Bánh mì chảo đặc biệt', price: 49000, desc: 'Trứng ốp la, pate, xúc xích và bánh mì', icon: '🍳' },
+  { id: 10, section: 'food', category: 'appetizer', name: 'Croissant bơ tỏi', price: 32000, desc: 'Bánh sừng bò thơm bơ tỏi', icon: '🥐' },
+  { id: 11, section: 'drink', category: 'coffee', name: 'Cà phê sữa đá', price: 29000, desc: 'Robusta Đắk Lắk và sữa đặc', icon: '☕' },
+  { id: 12, section: 'drink', category: 'coffee', name: 'Bạc xỉu', price: 32000, desc: 'Nhiều sữa, ít cà phê', icon: '🥛' },
+  { id: 13, section: 'drink', category: 'coffee', name: 'Cà phê muối', price: 35000, desc: 'Cà phê đậm vị cùng kem muối', icon: '🧂' },
+  { id: 14, section: 'drink', category: 'tea', name: 'Trà đào cam sả', price: 39000, desc: 'Đào giòn, cam tươi và sả', icon: '🍑' },
+  { id: 15, section: 'drink', category: 'tea', name: 'Trà dâu tằm macchiato', price: 42000, desc: 'Dâu tằm chua ngọt và kem cheese', icon: '🍓' },
+  { id: 16, section: 'drink', category: 'tea', name: 'Trà chanh mật ong', price: 32000, desc: 'Trà thanh mát, mật ong dịu nhẹ', icon: '🍋' },
+  { id: 17, section: 'drink', category: 'milktea', name: 'Trà sữa trân châu đường đen', price: 45000, desc: 'Sữa tươi, trân châu và đường đen', icon: '🧋' },
+  { id: 18, section: 'drink', category: 'milktea', name: 'Trà sữa oolong nướng', price: 40000, desc: 'Oolong rang thơm, vị ngọt dịu', icon: '🧋' },
+  { id: 19, section: 'drink', category: 'other-drink', name: 'Nước suối', price: 12000, desc: 'Nước khoáng đóng chai', icon: '💧' },
+  { id: 20, section: 'drink', category: 'other-drink', name: 'Nước ngọt', price: 18000, desc: 'Coca-Cola / Pepsi / 7Up', icon: '🥤' }
 ];
 
-// 2. KHỞI TẠO TRẠNG THÁI (STATE)
-let cart = {}; // Cấu trúc: { itemId: { item, qty } }
-let currentTable = "Bàn 01";
-
-// 3. ĐỌC MÃ BÀN TỪ URL (Ví dụ: https://domain.pages.dev/?table=05)
-function initTableFromURL() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const tableParam = urlParams.get('table');
-
-  if (tableParam) {
-    // Nếu param là "5" hay "05" -> Format thành "Bàn 05"
-    const formatted = tableParam.toString().padStart(2, '0');
-    currentTable = `Bàn ${formatted}`;
-  }
-
-  // Cập nhật giao diện với số bàn thực tế
-  document.getElementById('tableLabel').innerText = currentTable;
-  document.getElementById('currentTableText').innerText = currentTable;
-  document.getElementById('modalTableNumber').innerText = currentTable;
-  document.getElementById('successTableText').innerText = currentTable;
+let cart = {};
+let currentTable = null;
+const API_BASE = location.port === '3000' ? '' : `${location.protocol}//${location.hostname}:3000`;
+const apiUrl = path => `${API_BASE}${path}`;
+const money = value => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+async function getOrders() {
+  const response = await fetch(apiUrl(`/api/orders?table=${encodeURIComponent(currentTable)}`), { credentials: 'include' });
+  if (!response.ok) throw new Error('Không tải được đơn của bàn.');
+  return (await response.json()).orders;
 }
 
-// 4. RENDER DANH SÁCH MÓN ĂN RA GIAO DIỆN
-function renderMenu(categoryFilter = "all") {
-  const grid = document.getElementById('menuGrid');
-  grid.innerHTML = "";
-
-  const filteredItems = categoryFilter === "all" 
-    ? MENU_ITEMS 
-    : MENU_ITEMS.filter(item => item.category === categoryFilter);
-
-  filteredItems.forEach(item => {
-    const card = document.createElement('div');
-    card.className = "food-card";
-    card.innerHTML = `
-      <div class="food-img-wrap">
-        <span>${item.icon}</span>
-        <span class="food-badge">Best Seller</span>
-      </div>
-      <div class="food-info">
-        <div>
-          <h4 class="food-name">${item.name}</h4>
-          <p class="food-desc">${item.desc}</p>
-        </div>
-        <div class="food-bottom">
-          <span class="food-price">${item.price.toLocaleString('vi-VN')}đ</span>
-          <button class="btn-add" onclick="addToCart(${item.id})">+</button>
-        </div>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
-// 5. QUẢN LÝ GIỎ HÀNG
-window.addToCart = function(id) {
-  const item = MENU_ITEMS.find(i => i.id === id);
-  if (!item) return;
-
-  if (cart[id]) {
-    cart[id].qty += 1;
-  } else {
-    cart[id] = { item: item, qty: 1 };
-  }
-
-  updateCartUI();
-};
-
-window.changeQty = function(id, delta) {
-  if (!cart[id]) return;
-
-  cart[id].qty += delta;
-  if (cart[id].qty <= 0) {
-    delete cart[id];
-  }
-
-  updateCartUI();
-  renderCartModalItems();
-};
-
-function updateCartUI() {
-  const items = Object.values(cart);
-  const totalCount = items.reduce((sum, entry) => sum + entry.qty, 0);
-  const totalPrice = items.reduce((sum, entry) => sum + (entry.item.price * entry.qty), 0);
-
-  // Cập nhật thanh giỏ hàng nổi
-  document.getElementById('cartCountBadge').innerText = `${totalCount} món`;
-  document.getElementById('cartTotalPrice').innerText = `${totalPrice.toLocaleString('vi-VN')}đ`;
-
-  // Cập nhật giá trong modal
-  document.getElementById('subTotalText').innerText = `${totalPrice.toLocaleString('vi-VN')}đ`;
-  document.getElementById('finalTotalText').innerText = `${totalPrice.toLocaleString('vi-VN')}đ`;
-
-  // Tự động ẩn thanh giỏ hàng nếu chưa chọn món nào
-  const cartBar = document.getElementById('cartBar');
-  if (totalCount > 0) {
-    cartBar.style.display = 'flex';
-  } else {
-    cartBar.style.display = 'flex'; // Vẫn hiện để dễ tương tác
-  }
-}
-
-function renderCartModalItems() {
-  const list = document.getElementById('cartItemsList');
-  list.innerHTML = "";
-
-  const items = Object.values(cart);
-  if (items.length === 0) {
-    list.innerHTML = `<p style="text-align:center; color:#94a3b8; padding: 20px 0;">Giỏ hàng đang trống</p>`;
-    return;
-  }
-
-  items.forEach(({ item, qty }) => {
-    const row = document.createElement('div');
-    row.className = "cart-item-row";
-    row.innerHTML = `
-      <div>
-        <div style="font-weight: 600; font-size: 14px;">${item.name}</div>
-        <div style="color: #d97706; font-size: 13px; font-weight: 700;">
-          ${(item.price * qty).toLocaleString('vi-VN')}đ
-        </div>
-      </div>
-      <div class="item-qty-control">
-        <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
-        <span style="font-weight: 700; min-width: 20px; text-align: center;">${qty}</span>
-        <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
-      </div>
-    `;
-    list.appendChild(row);
-  });
-}
-
-// 6. GỬI ĐƠN HÀNG XUỐNG BẾP (ĐỒNG BỘ REALTIME)
-function submitOrder() {
-  const items = Object.values(cart);
-  if (items.length === 0) {
-    alert("Giỏ hàng của bạn đang trống! Vui lòng chọn món trước.");
-    return;
-  }
-
-  const totalPrice = items.reduce((sum, entry) => sum + (entry.item.price * entry.qty), 0);
-
-  // Tạo đối tượng Đơn Hàng (Order Object)
-  const newOrder = {
-    id: "ORD-" + Math.floor(1000 + Math.random() * 9000),
-    table: currentTable,
-    time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-    items: items.map(entry => ({
-      name: entry.item.name,
-      qty: entry.qty,
-      price: entry.item.price,
-      total: entry.item.price * entry.qty
-    })),
-    totalPrice: totalPrice,
-    status: "pending" // pending -> completed
+function renderMenu() {
+  const query = (document.getElementById('menuSearch')?.value || '').trim().toLocaleLowerCase('vi');
+  const foodLabels = { all: 'Tất cả món ăn', main: 'Món chính', appetizer: 'Món ăn nhẹ' };
+  const drinkLabels = { all: 'Tất cả đồ uống', coffee: 'Cà phê', tea: 'Trà', milktea: 'Trà sữa', 'other-drink': 'Nước đóng chai' };
+  const card = item => `<article class="food-card ${item.available === false ? 'sold-out' : ''}"><div class="food-img-wrap"><span>${item.icon}</span>${item.salePercent ? `<span class="sale-badge">-${item.salePercent}%</span>` : ''}${item.available === false ? '<span class="sold-out-badge">Tạm hết</span>' : ''}</div><div class="food-info"><div><h4 class="food-name">${item.name}</h4><p class="food-desc">${item.desc}</p></div><div class="food-bottom"><span class="food-price">${money(Math.round(item.price * (100 - (item.salePercent || 0)) / 100))}${item.salePercent ? `<del>${money(item.price)}</del>` : ''}</span><button class="btn-add" aria-label="Thêm ${item.name}" ${item.available === false ? 'disabled' : ''} onclick="addToCart(${item.id})">+</button></div></div></article>`;
+  const renderSection = (section, filters, labelMap, gridId) => {
+    const active = document.querySelector(`[data-filter-group="${section}"] .cat-btn.active`)?.dataset.filter || 'all';
+    const shown = MENU_ITEMS.filter(item => item.section === section && (active === 'all' || item.category === active) && (!query || `${item.name} ${item.desc}`.toLocaleLowerCase('vi').includes(query)));
+    document.getElementById(gridId).innerHTML = shown.map(card).join('');
+    const nav = document.querySelector(`[data-filter-group="${section}"]`);
+    nav.innerHTML = Object.entries(filters).map(([key, title]) => `<button class="cat-btn ${key === active ? 'active' : ''}" data-filter="${key}">${title}</button>`).join('');
+    nav.querySelectorAll('.cat-btn').forEach(button => button.addEventListener('click', () => {
+      nav.querySelectorAll('.cat-btn').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      const search = (document.getElementById('menuSearch')?.value || '').trim().toLocaleLowerCase('vi');
+      document.getElementById(gridId).innerHTML = MENU_ITEMS.filter(item => item.section === section && (button.dataset.filter === 'all' || item.category === button.dataset.filter) && (!search || `${item.name} ${item.desc}`.toLocaleLowerCase('vi').includes(search))).map(card).join('');
+    }));
   };
-
-  // 1. Lưu vào LocalStorage (để lưu trữ đơn)
-  const existingOrders = JSON.parse(localStorage.getItem('cloud_pos_orders') || '[]');
-  existingOrders.unshift(newOrder);
-  localStorage.setItem('cloud_pos_orders', JSON.stringify(existingOrders));
-
-  // 2. Phát tín hiệu Realtime qua BroadcastChannel (giao tiếp tức thì giữa tab Khách và Bếp)
-  try {
-    const channel = new BroadcastChannel('pos_kitchen_channel');
-    channel.postMessage({ type: 'NEW_ORDER', order: newOrder });
-  } catch (e) {
-    console.log("BroadcastChannel sync:", e);
-  }
-
-  // Đóng Modal giỏ hàng & Mở Modal thành công
-  document.getElementById('cartModal').classList.remove('active');
-  document.getElementById('successModal').classList.add('active');
-
-  // Reset giỏ hàng
-  cart = {};
-  updateCartUI();
+  renderSection('food', foodLabels, foodLabels, 'foodMenuGrid');
+  renderSection('drink', drinkLabels, drinkLabels, 'drinkMenuGrid');
 }
 
-// 7. GẮN SỰ KIỆN NÚT BẤM (EVENT LISTENERS)
-document.addEventListener('DOMContentLoaded', () => {
-  initTableFromURL();
-  renderMenu('all');
-  updateCartUI();
+function renderCart() {
+  const entries = Object.values(cart);
+  const count = entries.reduce((sum, entry) => sum + entry.qty, 0);
+  const total = entries.reduce((sum, entry) => sum + Math.round(entry.item.price * (100 - (entry.item.salePercent || 0)) / 100) * entry.qty, 0);
+  document.getElementById('cartCountBadge').textContent = `${count} món`;
+  document.getElementById('cartTotalPrice').textContent = money(total);
+  document.getElementById('subTotalText').textContent = money(total);
+  document.getElementById('finalTotalText').textContent = money(total);
+  const list = document.getElementById('cartItemsList');
+  list.innerHTML = entries.length ? entries.map(({ item, qty, note }) => `
+    <div class="cart-item-row"><div class="cart-line-main"><strong>${item.name}</strong><span>${money(Math.round(item.price * (100 - (item.salePercent || 0)) / 100) * qty)}</span>
+      <label class="note-label">Ghi chú món<input class="item-note-input" maxlength="100" value="${escapeHtml(note)}" placeholder="VD: ít ngọt, không đá" oninput="setItemNote(${item.id}, this.value)"></label></div>
+      <div class="item-qty-control"><button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button><b>${qty}</b><button class="qty-btn" onclick="changeQty(${item.id},1)">+</button></div></div>`).join('') : '<p class="empty-text">Giỏ hàng đang trống</p>';
+}
 
-  // Lọc danh mục
-  document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      renderMenu(e.target.dataset.category);
-    });
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+}
+
+window.addToCart = id => {
+  if (!currentTable) { showTableGuide(); return; }
+  const item = MENU_ITEMS.find(menuItem => menuItem.id === id);
+  if (!cart[id]) cart[id] = { item, qty: 0, note: '' };
+  cart[id].qty += 1;
+  renderCart();
+};
+function showTableGuide() {
+  const guide = document.getElementById('tableEntryGuide');
+  if (!guide) return;
+  guide.classList.add('guide-attention');
+  guide.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  window.setTimeout(() => guide.classList.remove('guide-attention'), 1800);
+}
+window.changeQty = (id, delta) => {
+  if (!cart[id]) return;
+  cart[id].qty += delta;
+  if (cart[id].qty <= 0) delete cart[id];
+  renderCart();
+};
+window.setItemNote = (id, note) => { if (cart[id]) cart[id].note = note; };
+
+async function renderCustomerStatus() {
+  const area = document.getElementById('customerOrders');
+  if (!area) return;
+  if (!currentTable) { area.innerHTML = ''; return; }
+  let active = [];
+  try { active = (await getOrders()).slice(0, 5); }
+  catch (error) { area.innerHTML = `<p class="connection-error">${error.message} Vui lòng tải lại trang.</p>`; return; }
+  area.innerHTML = active.length ? `<h2>Đơn của ${currentTable}</h2>${active.map(order => {
+    const label = { pending: 'Đang chờ bếp', cooking: 'Bếp đang chuẩn bị món', ready: 'Món đã sẵn sàng, đang chờ phục vụ', served: 'Đã phục vụ', paid: 'Đã thanh toán' }[order.status] || 'Đang xử lý';
+    return `<article class="customer-order-card"><div><strong>#${escapeHtml(order.id)}</strong><span>${label}</span></div><ul>${order.items.map(item => `<li>${item.qty} × ${escapeHtml(item.name)}${item.note ? ` <small>(${escapeHtml(item.note)})</small>` : ''}</li>`).join('')}</ul><b>${money(order.amountPaid ?? order.totalPrice)}</b><button class="print-receipt" onclick="printReceipt('${escapeHtml(order.id)}')">In hóa đơn</button></article>`;
+  }).join('')}` : '';
+}
+
+async function submitOrder() {
+  const entries = Object.values(cart);
+  if (!entries.length) return alert('Giỏ hàng đang trống.');
+  const submitButton = document.getElementById('btnSubmitOrder'); submitButton.disabled = true;
+  try {
+    const response = await fetch(apiUrl('/api/orders'), { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table: currentTable, items: entries.map(({ item, qty, note }) => ({ id: item.id, qty, note: note.trim() })) }) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Không gửi được đơn.');
+  } catch (error) { alert(error.message); submitButton.disabled = false; return; }
+  submitButton.disabled = false;
+  cart = {};
+  renderCart();
+  document.getElementById('cartModal').classList.remove('active');
+  await renderCustomerStatus();
+  document.getElementById('successModal').classList.add('active');
+}
+
+window.printReceipt = async id => {
+  const order = (await getOrders()).find(row => row.id === id); if (!order) return;
+  const receipt = document.getElementById('receiptPrint');
+  receipt.innerHTML = `<h2>Cloud Kitchen &amp; Cafe</h2><p>${order.status === 'paid' ? 'HÓA ĐƠN THANH TOÁN' : 'HÓA ĐƠN TẠM TÍNH'} · ${escapeHtml(order.table)}</p><p>Mã đơn: ${escapeHtml(order.id)} · ${new Date(order.createdAt).toLocaleString('vi-VN')}</p><hr>${order.items.map(item => `<p>${item.qty} × ${escapeHtml(item.name)} ${money(item.total)}</p>${item.salePercent ? `<small>Ưu đãi món: -${item.salePercent}%</small>` : ''}${item.note ? `<small>Ghi chú: ${escapeHtml(item.note)}</small>` : ''}`).join('')}<hr><p>Tạm tính sau ưu đãi món: <b>${money(order.totalPrice)}</b></p>${order.voucherDiscount ? `<p>Voucher ${escapeHtml(order.voucherCode)}: -${money(order.voucherDiscount)}</p>` : ''}<p>Thanh toán: <b>${money(order.amountPaid ?? order.totalPrice)}</b></p><p>${order.status === 'paid' ? 'Cảm ơn quý khách!' : 'Vui lòng thanh toán tại quầy.'}</p>`;
+  window.print();
+};
+
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const rawTableId = params.get('table');
+  const digits = rawTableId ? rawTableId.replace(/\D/g, '') : '';
+  const tableId = Number(digits);
+  currentTable = digits && tableId >= 1 && tableId <= 12 ? `Bàn ${String(tableId).padStart(2, '0')}` : null;
+  ['tableLabel', 'currentTableText', 'modalTableNumber', 'successTableText'].forEach(id => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = currentTable || 'Quét mã QR tại bàn';
   });
-
-  // Mở/Đóng Giỏ hàng
-  document.getElementById('btnOpenCart').addEventListener('click', () => {
-    renderCartModalItems();
-    document.getElementById('cartModal').classList.add('active');
-  });
-
-  document.getElementById('btnCloseCart').addEventListener('click', () => {
-    document.getElementById('cartModal').classList.remove('active');
-  });
-
-  // Gửi đơn
+  document.querySelector('.welcome-banner p').innerHTML = currentTable
+    ? `Quý khách đang ngồi tại <b>${currentTable}</b>. Vui lòng chọn món bên dưới.`
+    : 'Quý khách vui lòng quét mã QR trên bàn để gửi món đúng bàn. Bạn vẫn có thể xem thực đơn trước.';
+  document.getElementById('tableEntryGuide').hidden = Boolean(currentTable);
+  document.getElementById('tableBadge').classList.toggle('table-selected', Boolean(currentTable));
+  try { const response = await fetch('/api/menu'); MENU_ITEMS = (await response.json()).items; renderMenu(); }
+  catch { document.getElementById('foodMenuGrid').innerHTML = '<p class="connection-error">Chưa kết nối máy chủ POS ở cổng 3000. Hãy mở terminal trong thư mục dự án và chạy <code>node server.js</code>.</p>'; }
+  document.getElementById('menuSearch').addEventListener('input', renderMenu);
+  renderCart();
+  renderCustomerStatus();
+  document.querySelectorAll('.cat-btn').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('.cat-btn').forEach(item => item.classList.remove('active'));
+    button.classList.add('active');
+    renderMenu(button.dataset.category);
+  }));
+  document.getElementById('btnOpenCart').addEventListener('click', () => { if (!currentTable) return showTableGuide(); renderCart(); document.getElementById('cartModal').classList.add('active'); });
+  document.getElementById('btnCloseCart').addEventListener('click', () => document.getElementById('cartModal').classList.remove('active'));
   document.getElementById('btnSubmitOrder').addEventListener('click', submitOrder);
-
-  // Đóng modal thành công
-  document.getElementById('btnCloseSuccess').addEventListener('click', () => {
-    document.getElementById('successModal').classList.remove('active');
-  });
-});
+  document.getElementById('btnCloseSuccess').addEventListener('click', () => document.getElementById('successModal').classList.remove('active'));
+  if (currentTable) {
+    const updates = new EventSource(apiUrl(`/api/events?table=${encodeURIComponent(currentTable)}`), { withCredentials: true });
+    updates.addEventListener('order', renderCustomerStatus);
+  }
+}
+document.addEventListener('DOMContentLoaded', init);

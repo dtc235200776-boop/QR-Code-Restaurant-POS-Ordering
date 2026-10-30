@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <script>if (location.port === '5500') location.replace(`${location.protocol}//${location.hostname}:3000${location.pathname}${location.search}${location.hash}`);</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>QR POS - Đặt món tại bàn</title>
   <link rel="stylesheet" href="style.css">
@@ -15,13 +16,13 @@
     <div class="brand">
       <div class="logo-icon">☕</div>
       <div>
-        <h1 class="brand-title">Cloud Coffee & Tea</h1>
-        <p class="brand-sub">Hệ thống gọi món Cloudflare Edge</p>
+        <h1 class="brand-title">Cloud Kitchen & Cafe</h1>
+        <p class="brand-sub">Thực đơn món ăn và đồ uống</p>
       </div>
     </div>
     <div class="table-badge" id="tableBadge">
       <span class="badge-dot"></span>
-      <span id="tableLabel">Bàn 01</span>
+      <span id="tableLabel">Quét mã QR</span>
     </div>
   </header>
 
@@ -29,25 +30,31 @@
   <div class="welcome-banner">
     <div class="banner-text">
       <strong>👋 Xin chào quý khách!</strong>
-      <p>Quý khách đang ngồi tại <b id="currentTableText">Bàn 01</b>. Vui lòng chọn món bên dưới.</p>
+      <p>Quý khách vui lòng quét mã QR tại bàn để gọi món.</p>
     </div>
   </div>
+  <div class="table-entry-guide" id="tableEntryGuide">
+    <div><strong>Để gọi món đúng bàn, hãy quét mã QR đặt trên bàn.</strong><span>Nếu bàn chưa có mã hoặc mã bị hỏng, vui lòng nhờ nhân viên hỗ trợ.</span></div>
+    <span class="qr-protected-note">Đặt món tại bàn · quét QR</span>
+  </div>
 
-  <!-- Thanh lọc Danh mục món ăn -->
-  <nav class="category-nav" id="categoryNav">
-    <button class="cat-btn active" data-category="all">Tất cả</button>
-    <button class="cat-btn" data-category="coffee">Cà phê</button>
-    <button class="cat-btn" data-category="tea">Trà trái cây</button>
-    <button class="cat-btn" data-category="milktea">Trà sữa</button>
-    <button class="cat-btn" data-category="snack">Ăn vặt</button>
-  </nav>
+  <div class="menu-search-wrap"><label for="menuSearch">Tìm món</label><input id="menuSearch" type="search" placeholder="Nhập tên món ăn hoặc đồ uống…" autocomplete="off"><span aria-hidden="true">⌕</span></div>
+  <nav class="menu-jump" aria-label="Chọn nhóm thực đơn"><a href="#foodSection">🍽️ Món ăn</a><a href="#drinkSection">🥤 Đồ uống</a></nav>
 
-  <!-- Danh sách món ăn -->
-  <main class="menu-container">
-    <div class="menu-grid" id="menuGrid">
-      <!-- Món ăn sẽ được render tự động từ app.js -->
-    </div>
+  <main class="menu-container menu-sections">
+    <section class="menu-section" id="foodSection">
+      <div class="menu-section-heading"><div><span class="section-kicker">THỰC ĐƠN</span><h2>🍽️ Món ăn</h2><p>Món chính và món ăn nhẹ</p></div><span class="section-count">10 món</span></div>
+      <nav class="category-nav" data-filter-group="food" aria-label="Lọc món ăn"></nav>
+      <div class="menu-grid" id="foodMenuGrid"></div>
+    </section>
+    <section class="menu-section" id="drinkSection">
+      <div class="menu-section-heading"><div><span class="section-kicker">THỰC ĐƠN</span><h2>🥤 Đồ uống</h2><p>Cà phê, trà và nước giải khát</p></div><span class="section-count">10 món</span></div>
+      <nav class="category-nav" data-filter-group="drink" aria-label="Lọc đồ uống"></nav>
+      <div class="menu-grid" id="drinkMenuGrid"></div>
+    </section>
   </main>
+
+  <section class="customer-orders" id="customerOrders" aria-live="polite"></section>
 
   <!-- Thanh Giỏ hàng nổi ở đáy màn hình (Mobile Bottom Bar) -->
   <footer class="cart-bar" id="cartBar">
@@ -65,7 +72,7 @@
   <div class="modal-overlay" id="cartModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Giỏ hàng của bạn (<span id="modalTableNumber">Bàn 01</span>)</h3>
+        <h3>Giỏ hàng của bạn (<span id="modalTableNumber">Quét mã QR</span>)</h3>
         <button class="btn-close" id="btnCloseCart">&times;</button>
       </div>
       
@@ -95,10 +102,12 @@
     <div class="modal-content text-center">
       <div class="success-icon">🎉</div>
       <h3>Đã gửi đơn thành công!</h3>
-      <p>Nhà bếp đã nhận được order của <b id="successTableText">Bàn 01</b>. Đồ uống sẽ được phục vụ trong ít phút.</p>
+      <p>Nhà bếp đã nhận được đơn của <b id="successTableText">bàn của quý khách</b>.</p>
       <button class="btn-primary" id="btnCloseSuccess">Tiếp tục gọi món</button>
     </div>
   </div>
+
+  <section id="receiptPrint" class="receipt-print"></section>
 
   <script src="app.js"></script>
 </body>
