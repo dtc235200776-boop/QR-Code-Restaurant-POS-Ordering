@@ -83,8 +83,16 @@
     .qr-demo-link:hover { background: #92400e; }
     .qr-img { margin: 0 auto; }
     .print-header p { color: #64748b; }
+    .url-input-box select, .url-input-box input { max-width: 100%; margin: 8px 8px 8px 0; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; }
+    .url-input-box select { min-width: 260px; }
+    .url-input-box input { width: min(560px, 62%); }
+    .qr-url-label { display: block; margin-top: 8px; }
+    .network-hint { margin-top: 8px; color: #166534; font-size: 12px; }
+    .network-hint.network-error { color: #b91c1c; }
+    .qr-target-url { max-width: 100%; margin-top: 6px; overflow-wrap: anywhere; color: #64748b; font-size: 9px; }
+    .qr-fallback { display: grid; place-items: center; width: 200px; height: 200px; margin: 0 auto; padding: 14px; border: 1px dashed #dc2626; border-radius: 8px; background: #fef2f2; color: #b91c1c; font-size: 12px; }
     @media print {
-      .print-header, .url-input-box {
+      .print-header, .url-input-box, .qr-target-url, .qr-demo-link {
         display: none;
       }
       body {
@@ -106,10 +114,13 @@
   </div>
 
   <div class="url-input-box">
-      <label><b>Địa chỉ máy chủ cho khách quét:</b></label><br>
-    <small style="color: #64748b;">Điện thoại quét QR cần cùng Wi‑Fi với máy chạy POS. Hãy kiểm tra IP trước khi in.</small><br><br>
-    <input type="text" id="baseUrl" value="" placeholder="Đang lấy địa chỉ mạng của máy chủ…">
+    <label for="networkAddress"><b>Chọn IP Wi‑Fi của máy chạy POS:</b></label><br>
+    <small style="color: #64748b;">Chọn địa chỉ mạng nội bộ (thường dạng 192.168.x.x). Điện thoại phải cùng Wi‑Fi, máy POS phải bật và Windows Firewall cho phép Node.js qua mạng riêng.</small><br><br>
+    <select id="networkAddress" aria-label="Chọn địa chỉ IP Wi-Fi"><option value="">Đang dò địa chỉ IP…</option></select>
+    <label class="qr-url-label" for="baseUrl"><b>Link sẽ được mã hóa vào QR (có thể chỉnh tay):</b></label><br>
+    <input type="url" id="baseUrl" value="" placeholder="http://192.168.x.x:3000/index.html">
     <button class="btn-print" style="padding: 8px 14px;" onclick="renderQRCodes()">Cập nhật mã QR</button>
+    <p id="networkHint" class="network-hint" role="status">Mã QR cần chứa IP mạng LAN, không dùng localhost hoặc 127.0.0.1.</p>
   </div>
 
   <div class="tables-grid" id="tablesContainer">
@@ -118,14 +129,36 @@
 
   <script>
     function renderQRCodes() {
-      const baseUrl = document.getElementById('baseUrl').value.trim();
+      const input = document.getElementById('baseUrl');
+      let base;
+      try {
+        base = new URL(input.value.trim());
+        if (!['http:', 'https:'].includes(base.protocol)) throw new Error();
+        base.pathname = '/index.html';
+        base.searchParams.delete('table');
+        base.hash = '';
+      } catch (_) {
+        document.getElementById('networkHint').textContent = 'Link chưa hợp lệ. Hãy nhập link bắt đầu bằng http:// hoặc https://.';
+        document.getElementById('networkHint').classList.add('network-error');
+        return;
+      }
+      if (['localhost', '127.0.0.1', '0.0.0.0'].includes(base.hostname)) {
+        document.getElementById('networkHint').textContent = 'Địa chỉ này chỉ dùng được trên máy chạy POS. Hãy chọn IP Wi‑Fi để điện thoại truy cập.';
+        document.getElementById('networkHint').classList.add('network-error');
+        document.getElementById('tablesContainer').innerHTML = '<p class="network-hint network-error">Chưa tạo QR vì link hiện tại không truy cập được từ điện thoại. Hãy chọn IP Wi‑Fi ở phía trên.</p>';
+        return;
+      } else {
+        document.getElementById('networkHint').textContent = `QR sẽ mở ${base.origin}/index.html?table=XX. Điện thoại cần cùng Wi‑Fi với máy POS.`;
+        document.getElementById('networkHint').classList.remove('network-error');
+      }
       const container = document.getElementById('tablesContainer');
       container.innerHTML = "";
 
       for (let i = 1; i <= 12; i++) {
         const tableNum = i.toString().padStart(2, '0');
-        const sep = baseUrl.includes('?') ? '&' : '?';
-        const orderUrl = `${baseUrl}${sep}table=${tableNum}`;
+        const tableUrl = new URL(base);
+        tableUrl.searchParams.set('table', tableNum);
+        const orderUrl = tableUrl.href;
         const safeOrderUrl = orderUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const targetUrl = encodeURIComponent(orderUrl);
         // Sử dụng QuickChart QR API mã nguồn mở cực nhanh
@@ -138,9 +171,16 @@
           <a class="qr-open-link" href="${safeOrderUrl}" target="_blank" rel="noopener" aria-label="Mở thử trang gọi món Bàn ${tableNum}"><img class="qr-img" src="${qrApi}" alt="Mã QR gọi món Bàn ${tableNum}"></a>
           <div class="instruction">Quét mã này để mở menu đúng bàn</div>
           <a class="qr-demo-link" href="${safeOrderUrl}" target="_blank" rel="noopener">Mở thử Bàn ${tableNum} →</a>
-          <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Cloudflare Edge Fast Load</div>
+          <div class="qr-target-url">${base.origin}/index.html?table=${tableNum}</div>
         `;
         container.appendChild(card);
+        const image = card.querySelector('.qr-img');
+        image.addEventListener('error', () => {
+          const fallback = document.createElement('div');
+          fallback.className = 'qr-fallback';
+          fallback.textContent = 'Không tải được ảnh QR — kiểm tra kết nối Internet';
+          image.replaceWith(fallback);
+        }, { once: true });
       }
     }
 
@@ -152,9 +192,22 @@
         if (!response.ok) throw new Error('Không đọc được địa chỉ máy chủ');
         const network = await response.json();
         input.value = network.url;
+        const select = document.getElementById('networkAddress');
+        const choices = network.addresses || [];
+        select.innerHTML = choices.length
+          ? choices.map(item => `<option value="${item.address}" ${item.address === network.address ? 'selected' : ''}>${item.name}: ${item.address}</option>`).join('')
+          : '<option value="">Không tìm thấy IP mạng LAN</option>';
+        select.addEventListener('change', () => {
+          if (!select.value) return;
+          const next = new URL(input.value);
+          next.hostname = select.value;
+          input.value = next.href;
+          renderQRCodes();
+        });
       } catch (_) {
         const current = new URL('/index.html', window.location.origin);
         input.value = current.href;
+        document.getElementById('networkAddress').innerHTML = '<option value="">Không dò được IP — nhập link IP Wi‑Fi bên dưới</option>';
       }
       renderQRCodes();
     });

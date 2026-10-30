@@ -752,7 +752,20 @@ body {
 .receipt-print { display: none; }.print-receipt, .receipt-button { border: 1px solid #cbd5e1; border-radius: 7px; background: white; color: #334155; padding: 7px 10px; font-weight: 700; cursor: pointer; }.customer-order-card .print-receipt { grid-column: auto; align-self: end; }
 .connection-error { padding: 14px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 13px; }
 @media (max-width: 760px) { .station-grid { grid-template-columns: 1fr; }.kds-header, .professional-admin .admin-header { align-items: flex-start; flex-direction: column; }.professional-admin .tables-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }.kds-stats { grid-template-columns: 1fr; gap: 8px; }.kds-stats article { min-height: 64px; }.professional-admin .admin-section { padding: 14px; }.professional-admin .section-heading { flex-direction: column; }.bill-tabs { width: 100%; }.bill-tabs button { flex: 1; }.professional-admin .bill-card footer { align-items: flex-end; }.cashier-stats article { min-height: 85px; } }
-@media print { body * { visibility: hidden !important; }.receipt-print, .receipt-print * { visibility: visible !important; }.receipt-print { display: block !important; position: absolute; inset: 0 auto auto 0; width: 75mm; padding: 5mm; color: #111; background: white; font: 12px/1.5 Arial, sans-serif; }.receipt-print h2 { font-size: 17px; text-align: center; }.receipt-print p { margin: 5px 0; }.receipt-total { font-size: 15px; font-weight: 800; }.receipt-print hr { border: 0; border-top: 1px dashed #777; margin: 9px 0; } }
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  html, body { width: auto !important; height: auto !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; background: #fff !important; }
+  /* Remove the menu/dashboard from print layout entirely; visibility:hidden still reserves all of its pages. */
+  body * { display: none !important; visibility: hidden !important; }
+  .receipt-print, .receipt-print * { display: block !important; visibility: visible !important; }
+  .receipt-print { position: static !important; inset: auto !important; width: 72mm !important; max-width: 72mm !important; height: auto !important; min-height: 0 !important; margin: 0 auto !important; padding: 0 !important; overflow: visible !important; color: #111 !important; background: #fff !important; font: 12px/1.4 Arial, sans-serif !important; break-before: avoid-page !important; break-after: avoid-page !important; break-inside: avoid-page !important; page-break-before: avoid !important; page-break-after: avoid !important; page-break-inside: avoid !important; }
+  .receipt-print h2 { margin: 0 0 6px !important; font-size: 17px !important; text-align: center !important; }
+  .receipt-print p { margin: 4px 0 !important; }
+  .receipt-print b { display: inline !important; }
+  .receipt-print small { font-size: 10px !important; }
+  .receipt-print hr { display: block !important; height: 0 !important; border: 0 !important; border-top: 1px dashed #777 !important; margin: 7px 0 !important; }
+  .receipt-total { font-size: 15px !important; font-weight: 800 !important; }
+}
 
 /* Brighter, warm restaurant palette and a higher contrast kitchen display. */
 body:not(.professional-kitchen):not(.professional-admin) { background: linear-gradient(180deg, #fffaf1 0, #f8fafc 230px, #f5f7fb 100%); }

@@ -64,10 +64,26 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && url.pathname === '/api/health') return sendJson(res, 200, { ok: true, app: 'Cloud Kitchen POS', port: PORT, time: new Date().toISOString() });
     if (req.method === 'GET' && url.pathname === '/api/network') {
-      const addresses = Object.values(os.networkInterfaces()).flat().filter(item => item && item.family === 'IPv4' && !item.internal).map(item => item.address);
+      const allAddresses = Object.entries(os.networkInterfaces()).flatMap(([name, entries]) => (entries || [])
+        .filter(item => item && (item.family === 'IPv4' || item.family === 4) && !item.internal && !item.address.startsWith('169.254.'))
+        .map(item => ({ name, address: item.address })));
+      const virtualAdapter = item => /vmware|virtualbox|hyper-v|docker|wsl|loopback/i.test(item.name);
+      const physicalAddresses = allAddresses.filter(item => !virtualAdapter(item));
+      const addresses = (physicalAddresses.length ? physicalAddresses : allAddresses)
+        .sort((a, b) => {
+          const score = item => {
+            const name = /wi-?fi|wireless/i.test(item.name) ? 0 : /ethernet/i.test(item.name) ? 1 : virtualAdapter(item) ? 100 : 10;
+            const subnet = item.address.startsWith('192.168.') ? 0 : item.address.startsWith('10.') ? 1 : /^172\.(1[6-9]|2\d|3[01])\./.test(item.address) ? 2 : 5;
+            return name * 100 + subnet;
+          };
+          return score(a) - score(b);
+        });
       const host = req.headers.host?.split(':')[0];
-      const address = host && !['localhost', '127.0.0.1', '0.0.0.0'].includes(host) ? host : (addresses[0] || 'localhost');
-      return sendJson(res, 200, { address, url: `http://${address}:${PORT}/index.html` });
+      const hostInterface = allAddresses.find(item => item.address === host);
+      const hostIsVirtual = hostInterface && virtualAdapter(hostInterface);
+      const hostIsLoopback = !host || ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
+      const address = !hostIsLoopback && !hostIsVirtual ? host : (addresses[0]?.address || 'localhost');
+      return sendJson(res, 200, { address, addresses, url: `http://${address}:${PORT}/index.html` });
     }
     if (req.method === 'GET' && url.pathname === '/api/session') return sendJson(res, 200, { staff: isStaff(req) });
     if (req.method === 'POST' && url.pathname === '/api/login') {
