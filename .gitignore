@@ -3,3 +3,5 @@
 Thumbs.db
 *.log
 .vscode/
+.env
+data.json

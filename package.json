@@ -1,0 +1,8 @@
+{
+  "name": "cloud-restaurant-pos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QR restaurant ordering, kitchen display and cashier system",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

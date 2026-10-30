@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
+  <script>if (location.port === '5500') location.replace(`${location.protocol}//${location.hostname}:3000${location.pathname}${location.search}${location.hash}`);</script>
   <title>In Mã QR Theo Bàn - Cloud POS Demo</title>
   <style>
     body {
@@ -77,6 +78,11 @@
       color: #64748b;
       margin-top: 6px;
     }
+    .qr-open-link { display: block; width: fit-content; margin: 10px auto 0; }
+    .qr-demo-link { display: inline-block; margin-top: 10px; padding: 9px 13px; border-radius: 8px; color: #fff; background: #b45309; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .qr-demo-link:hover { background: #92400e; }
+    .qr-img { margin: 0 auto; }
+    .print-header p { color: #64748b; }
     @media print {
       .print-header, .url-input-box {
         display: none;
@@ -94,20 +100,20 @@
 </head>
 <body>
   <div class="print-header">
-    <h1>BỘ THẺ MÃ QR ĐẶT BÀN (DEMO MÔN ĐTĐM)</h1>
-    <p>In trang này ra giấy hoặc đưa màn hình điện thoại quét thử trực tiếp</p>
+    <h1>Cloud Kitchen &amp; Cafe · Mã QR gọi món</h1>
+    <p>Mỗi mã được gắn cố định với một bàn. In và đặt đúng mã tại đúng bàn.</p>
     <button class="btn-print" onclick="window.print()">🖨️ In ra giấy A4</button>
   </div>
 
   <div class="url-input-box">
-    <label><b>Đường dẫn gốc của ứng dụng:</b></label><br>
-    <small style="color: #64748b;">(Khi deploy lên Cloudflare, nhập link của bạn ví dụ: <code>https://pos-cloud.pages.dev</code>)</small><br><br>
-    <input type="text" id="baseUrl" value="http://localhost:5500/index.html">
+      <label><b>Địa chỉ máy chủ cho khách quét:</b></label><br>
+    <small style="color: #64748b;">Điện thoại quét QR cần cùng Wi‑Fi với máy chạy POS. Hãy kiểm tra IP trước khi in.</small><br><br>
+    <input type="text" id="baseUrl" value="" placeholder="Đang lấy địa chỉ mạng của máy chủ…">
     <button class="btn-print" style="padding: 8px 14px;" onclick="renderQRCodes()">Cập nhật mã QR</button>
   </div>
 
   <div class="tables-grid" id="tablesContainer">
-    <!-- Sinh động 6 bàn mẫu -->
+    <!-- Tạo QR cho 12 bàn mẫu -->
   </div>
 
   <script>
@@ -116,10 +122,12 @@
       const container = document.getElementById('tablesContainer');
       container.innerHTML = "";
 
-      for (let i = 1; i <= 6; i++) {
+      for (let i = 1; i <= 12; i++) {
         const tableNum = i.toString().padStart(2, '0');
         const sep = baseUrl.includes('?') ? '&' : '?';
-        const targetUrl = encodeURIComponent(`${baseUrl}${sep}table=${tableNum}`);
+        const orderUrl = `${baseUrl}${sep}table=${tableNum}`;
+        const safeOrderUrl = orderUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const targetUrl = encodeURIComponent(orderUrl);
         // Sử dụng QuickChart QR API mã nguồn mở cực nhanh
         const qrApi = `https://quickchart.io/qr?text=${targetUrl}&size=180&margin=1`;
 
@@ -127,19 +135,26 @@
         card.className = 'table-qr-card';
         card.innerHTML = `
           <div class="table-title">BÀN SỐ ${tableNum}</div>
-          <img class="qr-img" src="${qrApi}" alt="QR Bàn ${tableNum}">
-          <div class="instruction">Quét mã để đặt món tức thì</div>
+          <a class="qr-open-link" href="${safeOrderUrl}" target="_blank" rel="noopener" aria-label="Mở thử trang gọi món Bàn ${tableNum}"><img class="qr-img" src="${qrApi}" alt="Mã QR gọi món Bàn ${tableNum}"></a>
+          <div class="instruction">Quét mã này để mở menu đúng bàn</div>
+          <a class="qr-demo-link" href="${safeOrderUrl}" target="_blank" rel="noopener">Mở thử Bàn ${tableNum} →</a>
           <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Cloudflare Edge Fast Load</div>
         `;
         container.appendChild(card);
       }
     }
 
-    // Tự động nhận diện URL hiện tại nếu đang mở qua Live Server
-    window.addEventListener('DOMContentLoaded', () => {
-      const currentUrl = window.location.href.replace('/qrcodes/index.html', '/index.html').replace('/qrcodes/', '/index.html');
-      if (currentUrl.startsWith('http')) {
-        document.getElementById('baseUrl').value = currentUrl;
+    // Lấy IP LAN từ máy chủ để điện thoại quét QR có thể mở đúng máy tính chạy POS.
+    window.addEventListener('DOMContentLoaded', async () => {
+      const input = document.getElementById('baseUrl');
+      try {
+        const response = await fetch('/api/network', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Không đọc được địa chỉ máy chủ');
+        const network = await response.json();
+        input.value = network.url;
+      } catch (_) {
+        const current = new URL('/index.html', window.location.origin);
+        input.value = current.href;
       }
       renderQRCodes();
     });
