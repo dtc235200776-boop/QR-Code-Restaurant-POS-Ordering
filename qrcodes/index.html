@@ -2,90 +2,246 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <script>if (location.port === '5500') location.replace(`${location.protocol}//${location.hostname}:3000${location.pathname}${location.search}${location.hash}`);</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>In Mã QR Theo Bàn - Cloud POS Demo</title>
   <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --warning-bg: #fffbeb;
+      --warning-border: #f59e0b;
+      --warning-text: #b45309;
+      --danger-bg: #fef2f2;
+      --danger-border: #ef4444;
+      --danger-text: #b91c1c;
+      --success-bg: #f0fdf4;
+      --success-border: #22c55e;
+      --success-text: #15803d;
+      --card-border: #0f172a;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
-      background: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
       margin: 0;
-      padding: 20px;
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
     }
     .print-header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
     .print-header h1 {
       margin: 0 0 8px 0;
+      font-size: 26px;
+      font-weight: 800;
       color: #0f172a;
     }
-    .btn-print {
-      background: #2563eb;
+    .print-header p {
+      margin: 0 0 16px 0;
+      color: #64748b;
+      font-size: 15px;
+    }
+    .btn-action {
+      background: var(--primary);
       color: white;
       border: none;
       padding: 10px 20px;
-      font-size: 15px;
+      font-size: 14px;
       border-radius: 8px;
       cursor: pointer;
-      font-weight: bold;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .url-input-box {
-      margin: 15px auto;
-      max-width: 600px;
+    .btn-action:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .config-card {
       background: white;
-      padding: 15px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
-    .url-input-box input {
-      width: 70%;
-      padding: 8px 12px;
+    .config-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert-banner {
+      padding: 12px 16px;
+      border-radius: 8px;
       font-size: 14px;
-      border: 1px solid #94a3b8;
-      border-radius: 6px;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .alert-banner.warning {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: var(--warning-text);
+    }
+    .alert-banner.danger {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger-text);
+    }
+    .alert-banner.success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+    }
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .input-row input {
+      flex: 1;
+      min-width: 280px;
+      padding: 10px 14px;
+      font-size: 15px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-row input:focus {
+      border-color: var(--primary);
+    }
+    .quick-ips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+    .quick-ip-chip {
+      background: #e2e8f0;
+      color: #1e293b;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .quick-ip-chip:hover {
+      background: #cbd5e1;
+      transform: scale(1.03);
+    }
+    .quick-ip-chip.active-ip {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+    }
+    .port-selector {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #475569;
+    }
+    .guide-box {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+    }
+    .guide-box ol {
+      margin: 4px 0 0 18px;
+      padding: 0;
     }
     .tables-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
       gap: 20px;
-      max-width: 1000px;
-      margin: 0 auto;
     }
     .table-qr-card {
       background: white;
-      border: 2px solid #0f172a;
-      border-radius: 12px;
+      border: 2px solid var(--card-border);
+      border-radius: 14px;
       padding: 16px;
       text-align: center;
       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      page-break-inside: avoid;
     }
     .table-title {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 800;
       color: #b45309;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    .table-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 1px;
     }
     .qr-img {
-      width: 160px;
-      height: 160px;
-      margin: 10px auto;
+      width: 170px;
+      height: 170px;
+      margin: 12px auto;
       display: block;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
+      background: white;
     }
     .instruction {
       font-size: 12px;
-      color: #64748b;
-      margin-top: 6px;
+      color: #475569;
+      margin: 6px 0;
+      font-weight: 500;
     }
-    .qr-open-link { display: block; width: fit-content; margin: 10px auto 0; }
-    .qr-demo-link { display: inline-block; margin-top: 10px; padding: 9px 13px; border-radius: 8px; color: #fff; background: #b45309; font-size: 13px; font-weight: 700; text-decoration: none; }
-    .qr-demo-link:hover { background: #92400e; }
-    .qr-img { margin: 0 auto; }
-    .print-header p { color: #64748b; }
+    .qr-dest-url {
+      font-size: 10px;
+      color: #94a3b8;
+      word-break: break-all;
+      margin-top: 4px;
+      padding: 4px;
+      background: #f8fafc;
+      border-radius: 4px;
+    }
+    .qr-demo-link {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      color: #fff;
+      background: #b45309;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .qr-demo-link:hover {
+      background: #92400e;
+    }
     @media print {
-      .print-header, .url-input-box {
-        display: none;
+      .print-header .btn-action,
+      .config-card {
+        display: none !important;
       }
       body {
         background: white;
@@ -93,32 +249,93 @@
       }
       .tables-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
+        gap: 16px;
+      }
+      .table-qr-card {
+        border-color: #000;
+        box-shadow: none;
       }
     }
   </style>
 </head>
 <body>
-  <div class="print-header">
-    <h1>Cloud Kitchen &amp; Cafe · Mã QR gọi món</h1>
-    <p>Mỗi mã được gắn cố định với một bàn. In và đặt đúng mã tại đúng bàn.</p>
-    <button class="btn-print" onclick="window.print()">🖨️ In ra giấy A4</button>
-  </div>
+  <div class="container">
+    <div class="print-header">
+      <h1>Cloud Kitchen &amp; Cafe · Mã QR Gọi Món Theo Bàn</h1>
+      <p>Mỗi mã gắn cố định với một bàn. Khách chỉ cần quét mã bằng camera điện thoại để đặt món.</p>
+      <button class="btn-action" onclick="window.print()">🖨️ In ra giấy A4</button>
+    </div>
 
-  <div class="url-input-box">
-      <label><b>Địa chỉ máy chủ cho khách quét:</b></label><br>
-    <small style="color: #64748b;">Điện thoại quét QR cần cùng Wi‑Fi với máy chạy POS. Hãy kiểm tra IP trước khi in.</small><br><br>
-    <input type="text" id="baseUrl" value="" placeholder="Đang lấy địa chỉ mạng của máy chủ…">
-    <button class="btn-print" style="padding: 8px 14px;" onclick="renderQRCodes()">Cập nhật mã QR</button>
-  </div>
+    <!-- Hộp cấu hình địa chỉ IP máy chủ -->
+    <div class="config-card">
+      <div class="config-title">🌐 Cấu hình địa chỉ máy chủ cho điện thoại quét:</div>
+      
+      <!-- Cảnh báo nếu dùng localhost / 127.0.0.1 -->
+      <div id="ipAlertBox" class="alert-banner warning" style="display: none;"></div>
 
-  <div class="tables-grid" id="tablesContainer">
-    <!-- Tạo QR cho 12 bàn mẫu -->
+      <div class="input-row">
+        <input type="text" id="baseUrl" value="" placeholder="Ví dụ: http://192.168.187.140:5500/index.html">
+        <button class="btn-action" onclick="applyCustomUrl()">✓ Cập nhật mã QR</button>
+      </div>
+
+      <div class="quick-ips">
+        <span><b>Gợi ý IP LAN máy tính:</b></span>
+        <button class="quick-ip-chip" id="btnLanIp" onclick="selectIp('192.168.187.140')">📌 192.168.187.140 (Wi-Fi máy này)</button>
+        <span id="detectedIps"></span>
+      </div>
+
+      <div class="port-selector">
+        <span><b>Đổi cổng nhanh:</b></span>
+        <button class="quick-ip-chip" onclick="switchPort('5500')">Live Server (5500)</button>
+        <button class="quick-ip-chip" onclick="switchPort('3000')">Node Server (3000)</button>
+        <button class="quick-ip-chip" onclick="switchPort(location.port || '80')">Cổng hiện tại (${location.port || '80'})</button>
+      </div>
+
+      <div class="guide-box">
+        <b>💡 Để điện thoại quét mã thành công:</b>
+        <ol>
+          <li>Điện thoại và máy tính cần kết nối vào <b>cùng một mạng Wi-Fi</b>.</li>
+          <li>Địa chỉ trong mã QR <b>bắt buộc phải là IP mạng LAN</b> của máy tính (ví dụ <code>192.168.187.140</code>), <b>KHÔNG ĐƯỢC dùng</b> <code>localhost</code> hay <code>127.0.0.1</code> vì điện thoại sẽ không truy cập được.</li>
+          <li>Nếu chạy bằng Live Server của VS Code, hãy mở file này ở cổng 5500 hoặc chạy máy chủ Node.js qua file <code>start-pos.bat</code>.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Lưới 12 bàn -->
+    <div class="tables-grid" id="tablesContainer"></div>
   </div>
 
   <script>
+    const DEFAULT_LAN_IP = '192.168.187.140';
+
+    function checkHostWarning(urlStr) {
+      const alertBox = document.getElementById('ipAlertBox');
+      try {
+        const u = new URL(urlStr);
+        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+          alertBox.className = 'alert-banner danger';
+          alertBox.style.display = 'block';
+          alertBox.innerHTML = `⚠️ <b>CHÚ Ý QUAN TRỌNG:</b> Địa chỉ đang chứa <code>${u.hostname}</code>! Điện thoại khi quét mã sẽ hiểu là chính nó và <b>KHÔNG THỂ truy cập</b>. Vui lòng bấm vào nút <a href="javascript:void(0)" onclick="selectIp('${DEFAULT_LAN_IP}')" style="font-weight:bold; text-decoration:underline; color:#b91c1c;">[ 192.168.187.140 (Wi-Fi máy này) ]</a> bên dưới để điện thoại quét được!`;
+        } else {
+          alertBox.className = 'alert-banner success';
+          alertBox.style.display = 'block';
+          alertBox.innerHTML = `✓ <b>Tuyệt vời:</b> Địa chỉ IP đã hợp lệ (<code>${u.hostname}</code>). Điện thoại cùng Wi-Fi quét mã sẽ mở được ngay!`;
+        }
+      } catch (_) {
+        alertBox.style.display = 'none';
+      }
+    }
+
     function renderQRCodes() {
-      const baseUrl = document.getElementById('baseUrl').value.trim();
+      let baseUrl = document.getElementById('baseUrl').value.trim();
+      if (!baseUrl) return;
+      if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+        baseUrl = 'http://' + baseUrl;
+        document.getElementById('baseUrl').value = baseUrl;
+      }
+      localStorage.setItem('pos_qr_base_url', baseUrl);
+      checkHostWarning(baseUrl);
+
       const container = document.getElementById('tablesContainer');
       container.innerHTML = "";
 
@@ -128,34 +345,80 @@
         const orderUrl = `${baseUrl}${sep}table=${tableNum}`;
         const safeOrderUrl = orderUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const targetUrl = encodeURIComponent(orderUrl);
-        // Sử dụng QuickChart QR API mã nguồn mở cực nhanh
         const qrApi = `https://quickchart.io/qr?text=${targetUrl}&size=180&margin=1`;
 
         const card = document.createElement('div');
         card.className = 'table-qr-card';
         card.innerHTML = `
+          <div class="table-subtitle">Mã bàn ăn</div>
           <div class="table-title">BÀN SỐ ${tableNum}</div>
-          <a class="qr-open-link" href="${safeOrderUrl}" target="_blank" rel="noopener" aria-label="Mở thử trang gọi món Bàn ${tableNum}"><img class="qr-img" src="${qrApi}" alt="Mã QR gọi món Bàn ${tableNum}"></a>
-          <div class="instruction">Quét mã này để mở menu đúng bàn</div>
+          <a href="${safeOrderUrl}" target="_blank" rel="noopener">
+            <img class="qr-img" src="${qrApi}" alt="Mã QR gọi món Bàn ${tableNum}" loading="lazy">
+          </a>
+          <div class="instruction">Quét mã bằng camera để gọi món</div>
           <a class="qr-demo-link" href="${safeOrderUrl}" target="_blank" rel="noopener">Mở thử Bàn ${tableNum} →</a>
-          <div style="font-size: 10px; color: #94a3b8; margin-top: 4px;">Cloudflare Edge Fast Load</div>
+          <div class="qr-dest-url">${orderUrl}</div>
         `;
         container.appendChild(card);
       }
     }
 
-    // Lấy IP LAN từ máy chủ để điện thoại quét QR có thể mở đúng máy tính chạy POS.
-    window.addEventListener('DOMContentLoaded', async () => {
+    function applyCustomUrl() {
+      renderQRCodes();
+    }
+
+    function selectIp(ip) {
       const input = document.getElementById('baseUrl');
       try {
-        const response = await fetch('/api/network', { cache: 'no-store' });
-        if (!response.ok) throw new Error('Không đọc được địa chỉ máy chủ');
-        const network = await response.json();
-        input.value = network.url;
+        const u = new URL(input.value || `http://${ip}:5500/index.html`);
+        u.hostname = ip;
+        input.value = u.href;
       } catch (_) {
-        const current = new URL('/index.html', window.location.origin);
-        input.value = current.href;
+        const port = location.port || '5500';
+        input.value = `http://${ip}:${port}/index.html`;
       }
+      renderQRCodes();
+    }
+
+    function switchPort(port) {
+      const input = document.getElementById('baseUrl');
+      try {
+        const u = new URL(input.value || `http://${DEFAULT_LAN_IP}:${port}/index.html`);
+        u.port = port;
+        input.value = u.href;
+      } catch (_) {
+        input.value = `http://${DEFAULT_LAN_IP}:${port}/index.html`;
+      }
+      renderQRCodes();
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const input = document.getElementById('baseUrl');
+      const saved = localStorage.getItem('pos_qr_base_url');
+      
+      let initialUrl = '';
+
+      // 1. Thử lấy từ API mạng (nếu server Node đang chạy)
+      try {
+        const res = await fetch('/api/network', { cache: 'no-store' });
+        if (res.ok) {
+          const network = await res.json();
+          if (network.url) initialUrl = network.url;
+        }
+      } catch (_) {}
+
+      // 2. Nếu không lấy được qua API:
+      if (!initialUrl) {
+        if (saved) {
+          initialUrl = saved;
+        } else {
+          // Tự động dùng IP LAN máy tính thay vì localhost để điện thoại quét được ngay
+          const port = location.port || '5500';
+          initialUrl = `http://${DEFAULT_LAN_IP}:${port}/index.html`;
+        }
+      }
+
+      input.value = initialUrl;
       renderQRCodes();
     });
   </script>

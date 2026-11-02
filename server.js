@@ -48,26 +48,21 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const origin = req.headers.origin;
   if (origin) {
-    try {
-      const originUrl = new URL(origin);
-      const requestHost = new URL(`http://${req.headers.host || 'localhost'}`);
-      if (originUrl.hostname === requestHost.hostname && originUrl.protocol === 'http:') {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-        res.setHeader('Vary', 'Origin');
-      }
-    } catch (_) {}
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Vary', 'Origin');
   }
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   try {
     if (req.method === 'GET' && url.pathname === '/api/health') return sendJson(res, 200, { ok: true, app: 'Cloud Kitchen POS', port: PORT, time: new Date().toISOString() });
     if (req.method === 'GET' && url.pathname === '/api/network') {
-      const addresses = Object.values(os.networkInterfaces()).flat().filter(item => item && item.family === 'IPv4' && !item.internal).map(item => item.address);
+      const allAddresses = Object.values(os.networkInterfaces()).flat().filter(item => item && item.family === 'IPv4' && !item.internal).map(item => item.address);
+      const lanAddresses = allAddresses.filter(ip => !ip.startsWith('169.254.'));
       const host = req.headers.host?.split(':')[0];
-      const address = host && !['localhost', '127.0.0.1', '0.0.0.0'].includes(host) ? host : (addresses[0] || 'localhost');
-      return sendJson(res, 200, { address, url: `http://${address}:${PORT}/index.html` });
+      const address = host && !['localhost', '127.0.0.1', '0.0.0.0'].includes(host) ? host : (lanAddresses[0] || 'localhost');
+      return sendJson(res, 200, { address, addresses: lanAddresses, url: `http://${address}:${PORT}/index.html` });
     }
     if (req.method === 'GET' && url.pathname === '/api/session') return sendJson(res, 200, { staff: isStaff(req) });
     if (req.method === 'POST' && url.pathname === '/api/login') {

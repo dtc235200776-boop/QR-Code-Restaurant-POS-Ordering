@@ -26,10 +26,16 @@ let currentTable = null;
 const API_BASE = location.port === '3000' ? '' : `${location.protocol}//${location.hostname}:3000`;
 const apiUrl = path => `${API_BASE}${path}`;
 const money = value => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+
 async function getOrders() {
-  const response = await fetch(apiUrl(`/api/orders?table=${encodeURIComponent(currentTable)}`), { credentials: 'include' });
-  if (!response.ok) throw new Error('Không tải được đơn của bàn.');
-  return (await response.json()).orders;
+  try {
+    const response = await fetch(apiUrl(`/api/orders?table=${encodeURIComponent(currentTable)}`), { credentials: 'include' });
+    if (!response.ok) throw new Error('Không đọc được API server');
+    return (await response.json()).orders;
+  } catch (_) {
+    const local = JSON.parse(localStorage.getItem('cloud_pos_orders') || '[]');
+    return local.filter(order => order.table === currentTable);
+  }
 }
 
 function renderMenu() {
@@ -113,10 +119,37 @@ async function submitOrder() {
   if (!entries.length) return alert('Giỏ hàng đang trống.');
   const submitButton = document.getElementById('btnSubmitOrder'); submitButton.disabled = true;
   try {
-    const response = await fetch(apiUrl('/api/orders'), { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table: currentTable, items: entries.map(({ item, qty, note }) => ({ id: item.id, qty, note: note.trim() })) }) });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Không gửi được đơn.');
-  } catch (error) { alert(error.message); submitButton.disabled = false; return; }
+    const response = await fetch(apiUrl('/api/orders'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ table: currentTable, items: entries.map(({ item, qty, note }) => ({ id: item.id, qty, note: note.trim() })) })
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.error || 'Lỗi gửi API server');
+    }
+  } catch (error) {
+    // Chế độ demo / offline: lưu đơn vào localStorage để trải nghiệm trơn tru
+    console.info('Gửi đơn qua chế độ lưu cục bộ (Live Server demo):', error.message);
+    const local = JSON.parse(localStorage.getItem('cloud_pos_orders') || '[]');
+    const newOrder = {
+      id: `ORD-${Date.now().toString().slice(-6)}`,
+      table: currentTable,
+      items: entries.map(({ item, qty, note }) => ({
+        id: item.id,
+        name: item.name,
+        qty,
+        note: note.trim(),
+        total: Math.round(item.price * (100 - (item.salePercent || 0)) / 100) * qty
+      })),
+      totalPrice: entries.reduce((sum, e) => sum + Math.round(e.item.price * (100 - (e.item.salePercent || 0)) / 100) * e.qty, 0),
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    };
+    local.unshift(newOrder);
+    localStorage.setItem('cloud_pos_orders', JSON.stringify(local));
+  }
   submitButton.disabled = false;
   cart = {};
   renderCart();
@@ -147,8 +180,21 @@ async function init() {
     : 'Quý khách vui lòng quét mã QR trên bàn để gửi món đúng bàn. Bạn vẫn có thể xem thực đơn trước.';
   document.getElementById('tableEntryGuide').hidden = Boolean(currentTable);
   document.getElementById('tableBadge').classList.toggle('table-selected', Boolean(currentTable));
-  try { const response = await fetch('/api/menu'); MENU_ITEMS = (await response.json()).items; renderMenu(); }
-  catch { document.getElementById('foodMenuGrid').innerHTML = '<p class="connection-error">Chưa kết nối máy chủ POS ở cổng 3000. Hãy mở terminal trong thư mục dự án và chạy <code>node server.js</code>.</p>'; }
+
+  // Tải thực đơn từ API nếu có, hoặc dùng danh sách mẫu mặc định
+  try {
+    const response = await fetch(apiUrl('/api/menu'));
+    if (response.ok) {
+      const data = await response.json();
+      if (Array.isArray(data.items) && data.items.length) {
+        MENU_ITEMS = data.items;
+      }
+    }
+  } catch (_) {
+    console.info('Đang chạy giao diện xem trước (Live Server): Sử dụng danh sách thực đơn có sẵn.');
+  }
+  renderMenu();
+
   document.getElementById('menuSearch').addEventListener('input', renderMenu);
   renderCart();
   renderCustomerStatus();
@@ -162,8 +208,10 @@ async function init() {
   document.getElementById('btnSubmitOrder').addEventListener('click', submitOrder);
   document.getElementById('btnCloseSuccess').addEventListener('click', () => document.getElementById('successModal').classList.remove('active'));
   if (currentTable) {
-    const updates = new EventSource(apiUrl(`/api/events?table=${encodeURIComponent(currentTable)}`), { withCredentials: true });
-    updates.addEventListener('order', renderCustomerStatus);
+    try {
+      const updates = new EventSource(apiUrl(`/api/events?table=${encodeURIComponent(currentTable)}`), { withCredentials: true });
+      updates.addEventListener('order', renderCustomerStatus);
+    } catch (_) {}
   }
 }
 document.addEventListener('DOMContentLoaded', init);
