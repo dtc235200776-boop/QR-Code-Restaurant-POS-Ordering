@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>In Mã QR Theo Bàn - Cloud POS Demo</title>
+  <title>In Mã QR Theo Phòng - Grand Cloud Hotel & Resort</title>
   <style>
     :root {
       --primary: #2563eb;
@@ -261,20 +261,20 @@
 <body>
   <div class="container">
     <div class="print-header">
-      <h1>Cloud Kitchen &amp; Cafe · Mã QR Gọi Món Theo Bàn</h1>
-      <p>Mỗi mã gắn cố định với một bàn. Khách chỉ cần quét mã bằng camera điện thoại để đặt món.</p>
+      <h1>Grand Cloud Hotel &amp; Resort · Mã QR Dịch Vụ Theo Từng Phòng</h1>
+      <p>Mỗi mã gắn cố định với một phòng lưu trú (Phòng 101 - 112). Khách quét mã để gọi dịch vụ buồng phòng &amp; ẩm thực.</p>
       <button class="btn-action" onclick="window.print()">🖨️ In ra giấy A4</button>
     </div>
 
     <!-- Hộp cấu hình địa chỉ IP máy chủ -->
     <div class="config-card">
-      <div class="config-title">🌐 Cấu hình địa chỉ máy chủ cho điện thoại quét:</div>
+      <div class="config-title">🌐 Cấu hình địa chỉ máy chủ cho điện thoại khách quét:</div>
       
       <!-- Cảnh báo nếu dùng localhost / 127.0.0.1 -->
       <div id="ipAlertBox" class="alert-banner warning" style="display: none;"></div>
 
       <div class="input-row">
-        <input type="text" id="baseUrl" value="" placeholder="Ví dụ: http://192.168.187.140:5500/index.html">
+        <input type="text" id="baseUrl" value="" placeholder="Ví dụ: https://ten-du-an.onrender.com/index.html">
         <button class="btn-action" onclick="applyCustomUrl()">✓ Cập nhật mã QR</button>
       </div>
 
@@ -292,16 +292,16 @@
       </div>
 
       <div class="guide-box">
-        <b>💡 Để điện thoại quét mã thành công:</b>
+        <b>💡 Hướng dẫn vận hành:</b>
         <ol>
-          <li>Điện thoại và máy tính cần kết nối vào <b>cùng một mạng Wi-Fi</b>.</li>
-          <li>Địa chỉ trong mã QR <b>bắt buộc phải là IP mạng LAN</b> của máy tính (ví dụ <code>192.168.187.140</code>), <b>KHÔNG ĐƯỢC dùng</b> <code>localhost</code> hay <code>127.0.0.1</code> vì điện thoại sẽ không truy cập được.</li>
-          <li>Nếu chạy bằng Live Server của VS Code, hãy mở file này ở cổng 5500 hoặc chạy máy chủ Node.js qua file <code>start-pos.bat</code>.</li>
+          <li>Khi deploy lên Cloud (như Render), bạn dán đường link HTTPS (ví dụ <code>https://ten-app.onrender.com/index.html</code>) vào ô trên rồi bấm Cập nhật mã QR.</li>
+          <li>In ra giấy và đặt tại bàn làm việc hoặc tủ đầu giường từng phòng khách sạn.</li>
+          <li>Bất kỳ khách lưu trú nào dùng điện thoại quét mã là hệ thống tự động nhận diện đúng số phòng!</li>
         </ol>
       </div>
     </div>
 
-    <!-- Lưới 12 bàn -->
+    <!-- Lưới 12 phòng (Phòng 101 -> Phòng 112) -->
     <div class="tables-grid" id="tablesContainer"></div>
   </div>
 
@@ -315,11 +315,11 @@
         if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
           alertBox.className = 'alert-banner danger';
           alertBox.style.display = 'block';
-          alertBox.innerHTML = `⚠️ <b>CHÚ Ý QUAN TRỌNG:</b> Địa chỉ đang chứa <code>${u.hostname}</code>! Điện thoại khi quét mã sẽ hiểu là chính nó và <b>KHÔNG THỂ truy cập</b>. Vui lòng bấm vào nút <a href="javascript:void(0)" onclick="selectIp('${DEFAULT_LAN_IP}')" style="font-weight:bold; text-decoration:underline; color:#b91c1c;">[ 192.168.187.140 (Wi-Fi máy này) ]</a> bên dưới để điện thoại quét được!`;
+          alertBox.innerHTML = `⚠️ <b>CHÚ Ý QUAN TRỌNG:</b> Địa chỉ đang chứa <code>${u.hostname}</code>! Điện thoại khi quét mã sẽ hiểu là chính nó và <b>KHÔNG THỂ truy cập</b>. Vui lòng bấm vào nút <a href="javascript:void(0)" onclick="selectIp('${DEFAULT_LAN_IP}')" style="font-weight:bold; text-decoration:underline; color:#b91c1c;">[ 192.168.187.140 (Wi-Fi máy này) ]</a> hoặc nhập link Cloud (Render) bên dưới để điện thoại quét được!`;
         } else {
           alertBox.className = 'alert-banner success';
           alertBox.style.display = 'block';
-          alertBox.innerHTML = `✓ <b>Tuyệt vời:</b> Địa chỉ IP đã hợp lệ (<code>${u.hostname}</code>). Điện thoại cùng Wi-Fi quét mã sẽ mở được ngay!`;
+          alertBox.innerHTML = `✓ <b>Tuyệt vời:</b> Địa chỉ máy chủ hợp lệ (<code>${u.hostname}</code>). Điện thoại quét mã sẽ mở đúng phòng ngay!`;
         }
       } catch (_) {
         alertBox.style.display = 'none';
@@ -333,16 +333,17 @@
         baseUrl = 'http://' + baseUrl;
         document.getElementById('baseUrl').value = baseUrl;
       }
-      localStorage.setItem('pos_qr_base_url', baseUrl);
+      localStorage.setItem('hotel_qr_base_url', baseUrl);
       checkHostWarning(baseUrl);
 
       const container = document.getElementById('tablesContainer');
       container.innerHTML = "";
 
+      // Tạo QR cho 12 phòng: Phòng 101 đến Phòng 112
       for (let i = 1; i <= 12; i++) {
-        const tableNum = i.toString().padStart(2, '0');
+        const roomNum = 100 + i;
         const sep = baseUrl.includes('?') ? '&' : '?';
-        const orderUrl = `${baseUrl}${sep}table=${tableNum}`;
+        const orderUrl = `${baseUrl}${sep}room=${roomNum}`;
         const safeOrderUrl = orderUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const targetUrl = encodeURIComponent(orderUrl);
         const qrApi = `https://quickchart.io/qr?text=${targetUrl}&size=180&margin=1`;
@@ -350,13 +351,13 @@
         const card = document.createElement('div');
         card.className = 'table-qr-card';
         card.innerHTML = `
-          <div class="table-subtitle">Mã bàn ăn</div>
-          <div class="table-title">BÀN SỐ ${tableNum}</div>
+          <div class="table-subtitle">Grand Cloud Hotel</div>
+          <div class="table-title">PHÒNG ${roomNum}</div>
           <a href="${safeOrderUrl}" target="_blank" rel="noopener">
-            <img class="qr-img" src="${qrApi}" alt="Mã QR gọi món Bàn ${tableNum}" loading="lazy">
+            <img class="qr-img" src="${qrApi}" alt="Mã QR dịch vụ Phòng ${roomNum}" loading="lazy">
           </a>
-          <div class="instruction">Quét mã bằng camera để gọi món</div>
-          <a class="qr-demo-link" href="${safeOrderUrl}" target="_blank" rel="noopener">Mở thử Bàn ${tableNum} →</a>
+          <div class="instruction">Quét mã bằng camera để gọi dịch vụ phòng</div>
+          <a class="qr-demo-link" href="${safeOrderUrl}" target="_blank" rel="noopener">Mở thử Phòng ${roomNum} →</a>
           <div class="qr-dest-url">${orderUrl}</div>
         `;
         container.appendChild(card);
@@ -394,11 +395,10 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       const input = document.getElementById('baseUrl');
-      const saved = localStorage.getItem('pos_qr_base_url');
+      const saved = localStorage.getItem('hotel_qr_base_url');
       
       let initialUrl = '';
 
-      // 1. Thử lấy từ API mạng (nếu server Node đang chạy)
       try {
         const res = await fetch('/api/network', { cache: 'no-store' });
         if (res.ok) {
@@ -407,12 +407,10 @@
         }
       } catch (_) {}
 
-      // 2. Nếu không lấy được qua API:
       if (!initialUrl) {
         if (saved) {
           initialUrl = saved;
         } else {
-          // Tự động dùng IP LAN máy tính thay vì localhost để điện thoại quét được ngay
           const port = location.port || '5500';
           initialUrl = `http://${DEFAULT_LAN_IP}:${port}/index.html`;
         }

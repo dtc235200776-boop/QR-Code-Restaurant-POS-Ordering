@@ -2,9 +2,8 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>QR POS - Đặt món tại bàn</title>
+  <title>Grand Cloud Hotel & Resort - Dịch vụ phòng thông minh</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,42 +13,68 @@
   <!-- Thanh Header trên cùng -->
   <header class="app-header">
     <div class="brand">
-      <div class="logo-icon">☕</div>
+      <div class="logo-icon">🛎️</div>
       <div>
-        <h1 class="brand-title">Cloud Kitchen & Cafe</h1>
-        <p class="brand-sub">Thực đơn món ăn và đồ uống</p>
+        <h1 class="brand-title">Grand Cloud Hotel &amp; Resort</h1>
+        <p class="brand-sub">Dịch vụ buồng phòng &amp; Ẩm thực tại phòng</p>
       </div>
     </div>
     <div class="table-badge" id="tableBadge">
       <span class="badge-dot"></span>
-      <span id="tableLabel">Quét mã QR</span>
+      <span id="tableLabel">Quét mã QR phòng</span>
     </div>
   </header>
 
   <!-- Banner thông báo quét mã QR thành công -->
   <div class="welcome-banner">
     <div class="banner-text">
-      <strong>👋 Xin chào quý khách!</strong>
-      <p>Quý khách vui lòng quét mã QR tại bàn để gọi món.</p>
+      <strong>👋 Kính chào quý khách!</strong>
+      <p>Quý khách vui lòng quét mã QR đặt tại bàn trong phòng để gọi dịch vụ.</p>
     </div>
   </div>
   <div class="table-entry-guide" id="tableEntryGuide">
-    <div><strong>Để gọi món đúng bàn, hãy quét mã QR đặt trên bàn.</strong><span>Nếu bàn chưa có mã hoặc mã bị hỏng, vui lòng nhờ nhân viên hỗ trợ.</span></div>
-    <span class="qr-protected-note">Đặt món tại bàn · quét QR</span>
+    <div>
+      <strong>Để phục vụ đúng phòng, hãy quét mã QR đặt tại bàn phòng lưu trú.</strong>
+      <span>Nếu phòng chưa có mã hoặc cần hỗ trợ khẩn cấp, vui lòng bấm số máy nhánh 0 gọi Lễ tân.</span>
+    </div>
+    <span class="qr-protected-note">Dịch vụ tại phòng · Quét mã QR</span>
   </div>
 
-  <div class="menu-search-wrap"><label for="menuSearch">Tìm món</label><input id="menuSearch" type="search" placeholder="Nhập tên món ăn hoặc đồ uống…" autocomplete="off"><span aria-hidden="true">⌕</span></div>
-  <nav class="menu-jump" aria-label="Chọn nhóm thực đơn"><a href="#foodSection">🍽️ Món ăn</a><a href="#drinkSection">🥤 Đồ uống</a></nav>
+  <div class="menu-search-wrap">
+    <label for="menuSearch">Tìm kiếm</label>
+    <input id="menuSearch" type="search" placeholder="Tìm dịch vụ buồng phòng, giặt ủi hoặc món ăn…" autocomplete="off">
+    <span aria-hidden="true">⌕</span>
+  </div>
+  
+  <nav class="menu-jump" aria-label="Chọn nhóm dịch vụ">
+    <a href="#foodSection">🧹 Dịch vụ buồng phòng</a>
+    <a href="#drinkSection">🍽️ Ẩm thực tại phòng</a>
+  </nav>
 
   <main class="menu-container menu-sections">
     <section class="menu-section" id="foodSection">
-      <div class="menu-section-heading"><div><span class="section-kicker">THỰC ĐƠN</span><h2>🍽️ Món ăn</h2><p>Món chính và món ăn nhẹ</p></div><span class="section-count">10 món</span></div>
-      <nav class="category-nav" data-filter-group="food" aria-label="Lọc món ăn"></nav>
+      <div class="menu-section-heading">
+        <div>
+          <span class="section-kicker">TIỆN ÍCH LƯU TRÚ</span>
+          <h2>🧹 Dịch vụ Buồng phòng &amp; Tiện ích</h2>
+          <p>Dọn phòng, giặt ủi, mượn vật dụng và dịch vụ di chuyển</p>
+        </div>
+        <span class="section-count">8 dịch vụ</span>
+      </div>
+      <nav class="category-nav" data-filter-group="housekeeping" aria-label="Lọc dịch vụ"></nav>
       <div class="menu-grid" id="foodMenuGrid"></div>
     </section>
+
     <section class="menu-section" id="drinkSection">
-      <div class="menu-section-heading"><div><span class="section-kicker">THỰC ĐƠN</span><h2>🥤 Đồ uống</h2><p>Cà phê, trà và nước giải khát</p></div><span class="section-count">10 món</span></div>
-      <nav class="category-nav" data-filter-group="drink" aria-label="Lọc đồ uống"></nav>
+      <div class="menu-section-heading">
+        <div>
+          <span class="section-kicker">IN-ROOM DINING</span>
+          <h2>🍽️ Ẩm thực &amp; Minibar tại phòng</h2>
+          <p>Điểm tâm sáng, món chính, cà phê và đồ uống Minibar</p>
+        </div>
+        <span class="section-count">12 món</span>
+      </div>
+      <nav class="category-nav" data-filter-group="dining" aria-label="Lọc ẩm thực"></nav>
       <div class="menu-grid" id="drinkMenuGrid"></div>
     </section>
   </main>
@@ -59,11 +84,11 @@
   <!-- Thanh Giỏ hàng nổi ở đáy màn hình (Mobile Bottom Bar) -->
   <footer class="cart-bar" id="cartBar">
     <div class="cart-info">
-      <div class="cart-count-badge" id="cartCountBadge">0 món</div>
+      <div class="cart-count-badge" id="cartCountBadge">0 dịch vụ</div>
       <div class="cart-total-price" id="cartTotalPrice">0đ</div>
     </div>
     <button class="btn-checkout" id="btnOpenCart">
-      <span>Xem giỏ hàng</span>
+      <span>Xem yêu cầu</span>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
   </footer>
@@ -72,27 +97,27 @@
   <div class="modal-overlay" id="cartModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Giỏ hàng của bạn (<span id="modalTableNumber">Quét mã QR</span>)</h3>
+        <h3>Danh sách yêu cầu (<span id="modalTableNumber">Quét mã QR phòng</span>)</h3>
         <button class="btn-close" id="btnCloseCart">&times;</button>
       </div>
       
       <div class="cart-items-list" id="cartItemsList">
-        <!-- Các món đã chọn sẽ hiện ở đây -->
+        <!-- Các dịch vụ đã chọn sẽ hiện ở đây -->
       </div>
 
       <div class="modal-summary">
         <div class="summary-row">
-          <span>Tạm tính:</span>
+          <span>Tạm tính phí dịch vụ:</span>
           <span id="subTotalText">0đ</span>
         </div>
         <div class="summary-row font-bold">
-          <span>Tổng thanh toán:</span>
+          <span>Tổng tiền (Tính vào hóa đơn phòng):</span>
           <span class="total-highlight" id="finalTotalText">0đ</span>
         </div>
       </div>
 
       <div class="modal-actions">
-        <button class="btn-primary" id="btnSubmitOrder">🚀 Gửi đơn xuống Bếp</button>
+        <button class="btn-primary" id="btnSubmitOrder">🛎️ Gửi yêu cầu tới Bộ phận phục vụ</button>
       </div>
     </div>
   </div>
@@ -100,10 +125,10 @@
   <!-- Popup Thông báo Đặt món thành công -->
   <div class="modal-overlay" id="successModal">
     <div class="modal-content text-center">
-      <div class="success-icon">🎉</div>
-      <h3>Đã gửi đơn thành công!</h3>
-      <p>Nhà bếp đã nhận được đơn của <b id="successTableText">bàn của quý khách</b>.</p>
-      <button class="btn-primary" id="btnCloseSuccess">Tiếp tục gọi món</button>
+      <div class="success-icon">🛎️</div>
+      <h3>Đã tiếp nhận yêu cầu!</h3>
+      <p>Bộ phận Buồng phòng &amp; Lễ tân đã nhận được yêu cầu từ <b id="successTableText">phòng của quý khách</b> và đang tiến hành phục vụ.</p>
+      <button class="btn-primary" id="btnCloseSuccess">Tiếp tục xem dịch vụ</button>
     </div>
   </div>
 

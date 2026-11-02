@@ -7,34 +7,40 @@ const os = require('node:os');
 const ROOT = __dirname;
 const DATA_FILE = path.join(ROOT, 'data.json');
 const PORT = Number(process.env.PORT || 3000);
-const STAFF_PIN = process.env.STAFF_PIN || '246810'; // Demo PIN; set STAFF_PIN before exposing the server.
-const SESSION_COOKIE = 'cloud_pos_staff';
+const STAFF_PIN = process.env.STAFF_PIN || '246810'; // Demo PIN for Hotel Staff
+const SESSION_COOKIE = 'hotel_pos_staff';
 const sessions = new Map();
 const streams = new Set();
-const seedMenu = [
-  { id: 1, section: 'food', category: 'main', name: 'Cơm tấm sườn bì chả', price: 59000, desc: 'Sườn nướng, bì, chả trứng và nước mắm', icon: '🍛', salePercent: 10 },
-  { id: 2, section: 'food', category: 'main', name: 'Cơm gà sốt mắm tỏi', price: 55000, desc: 'Đùi gà chiên giòn, cơm nóng và dưa góp', icon: '🍗', salePercent: 0 },
-  { id: 3, section: 'food', category: 'main', name: 'Bò lúc lắc khoai tây', price: 79000, desc: 'Bò mềm xào rau củ, ăn kèm khoai tây', icon: '🥩', salePercent: 0 },
-  { id: 4, section: 'food', category: 'main', name: 'Mì xào hải sản', price: 69000, desc: 'Mì xào tôm mực cùng rau củ tươi', icon: '🍜', salePercent: 0 },
-  { id: 5, section: 'food', category: 'main', name: 'Phở bò tái', price: 59000, desc: 'Nước dùng ninh xương, bánh phở mềm', icon: '🍲', salePercent: 0 },
-  { id: 6, section: 'food', category: 'main', name: 'Bún bò Huế', price: 62000, desc: 'Bò, chả cua và nước dùng sả ớt', icon: '🍜', salePercent: 0 },
-  { id: 7, section: 'food', category: 'appetizer', name: 'Gỏi cuốn tôm thịt (2 cuốn)', price: 39000, desc: 'Rau tươi, tôm thịt và nước chấm', icon: '🥗', salePercent: 0 },
-  { id: 8, section: 'food', category: 'appetizer', name: 'Khoai tây chiên phô mai', price: 35000, desc: 'Khoai vàng giòn lắc phô mai', icon: '🍟', salePercent: 0 },
-  { id: 9, section: 'food', category: 'appetizer', name: 'Bánh mì chảo đặc biệt', price: 49000, desc: 'Trứng ốp la, pate, xúc xích và bánh mì', icon: '🍳', salePercent: 0 },
-  { id: 10, section: 'food', category: 'appetizer', name: 'Croissant bơ tỏi', price: 32000, desc: 'Bánh sừng bò thơm bơ tỏi', icon: '🥐', salePercent: 0 },
-  { id: 11, section: 'drink', category: 'coffee', name: 'Cà phê sữa đá', price: 29000, desc: 'Robusta Đắk Lắk và sữa đặc', icon: '☕', salePercent: 0 },
-  { id: 12, section: 'drink', category: 'coffee', name: 'Bạc xỉu', price: 32000, desc: 'Nhiều sữa, ít cà phê', icon: '🥛', salePercent: 0 },
-  { id: 13, section: 'drink', category: 'coffee', name: 'Cà phê muối', price: 35000, desc: 'Cà phê đậm vị cùng kem muối', icon: '🧂', salePercent: 0 },
-  { id: 14, section: 'drink', category: 'tea', name: 'Trà đào cam sả', price: 39000, desc: 'Đào giòn, cam tươi và sả', icon: '🍑', salePercent: 10 },
-  { id: 15, section: 'drink', category: 'tea', name: 'Trà dâu tằm macchiato', price: 42000, desc: 'Dâu tằm chua ngọt và kem cheese', icon: '🍓', salePercent: 0 },
-  { id: 16, section: 'drink', category: 'tea', name: 'Trà chanh mật ong', price: 32000, desc: 'Trà thanh mát, mật ong dịu nhẹ', icon: '🍋', salePercent: 0 },
-  { id: 17, section: 'drink', category: 'milktea', name: 'Trà sữa trân châu đường đen', price: 45000, desc: 'Sữa tươi, trân châu và đường đen', icon: '🧋', salePercent: 0 },
-  { id: 18, section: 'drink', category: 'milktea', name: 'Trà sữa oolong nướng', price: 40000, desc: 'Oolong rang thơm, vị ngọt dịu', icon: '🧋', salePercent: 0 },
-  { id: 19, section: 'drink', category: 'other-drink', name: 'Nước suối', price: 12000, desc: 'Nước khoáng đóng chai', icon: '💧', salePercent: 0 },
-  { id: 20, section: 'drink', category: 'other-drink', name: 'Nước ngọt', price: 18000, desc: 'Coca-Cola / Pepsi / 7Up', icon: '🥤', salePercent: 0 }
+
+const seedServices = [
+  // 1. Dịch vụ buồng phòng & Tiện ích (Housekeeping & Amenities)
+  { id: 1, section: 'housekeeping', category: 'cleaning', name: 'Yêu cầu dọn phòng & Đổi ga gối', price: 0, desc: 'Nhân viên buồng phòng sẽ đến hút bụi, dọn phòng và thay ga gối mới', icon: '🧹', salePercent: 0 },
+  { id: 2, section: 'housekeeping', category: 'cleaning', name: 'Bổ sung khăn tắm & Bộ vệ sinh', price: 0, desc: 'Bổ sung 2 khăn tắm lớn, bàn chải, dầu gội và sữa tắm', icon: '🛁', salePercent: 0 },
+  { id: 3, section: 'housekeeping', category: 'amenities', name: 'Mượn bàn ủi & Cầu là', price: 0, desc: 'Mượn bàn ủi hơi nước và cầu là sử dụng tại phòng (miễn phí 2h)', icon: '👔', salePercent: 0 },
+  { id: 4, section: 'housekeeping', category: 'amenities', name: 'Mượn máy sấy tóc & Ổ cắm quốc tế', price: 0, desc: 'Máy sấy tóc ion âm và củ sạc đa năng chuyển đổi chuẩn cắm', icon: '🔌', salePercent: 0 },
+  { id: 5, section: 'housekeeping', category: 'laundry', name: 'Giặt sấy quần áo tiêu chuẩn (Bộ)', price: 45000, desc: 'Nhận giặt sạch, sấy khô và gấp gọn giao lại trong 4 tiếng', icon: '🧺', salePercent: 10 },
+  { id: 6, section: 'housekeeping', category: 'laundry', name: 'Giặt hấp ủi cao cấp (Vest / Đầm)', price: 85000, desc: 'Giặt hấp chuyên dụng giữ phom dáng đồ cao cấp', icon: '👗', salePercent: 0 },
+  { id: 7, section: 'housekeeping', category: 'rental', name: 'Thuê xe máy tay ga (Theo ngày)', price: 150000, desc: 'Xe tay ga đời mới, kèm 2 mũ bảo hiểm và giao xe tại sảnh', icon: '🛵', salePercent: 0 },
+  { id: 8, section: 'housekeeping', category: 'rental', name: 'Xe đưa đón sân bay 4-7 chỗ', price: 320000, desc: 'Xe riêng đưa đón tận sảnh khách sạn đúng giờ hẹn', icon: '🚗', salePercent: 0 },
+
+  // 2. Ẩm thực & Minibar tại phòng (In-Room Dining)
+  { id: 9, section: 'dining', category: 'breakfast', name: 'Set Ăn sáng kiểu Âu (Continental)', price: 65000, desc: 'Bánh sừng bò, trứng ốp la, xúc xích Đức, bơ mứt và nước cam', icon: '🍳', salePercent: 10 },
+  { id: 10, section: 'dining', category: 'breakfast', name: 'Phở bò tái nạm tại phòng', price: 59000, desc: 'Bát phở bò nóng hổi kèm quẩy giòn và rau thơm phục vụ tận phòng', icon: '🍲', salePercent: 0 },
+  { id: 11, section: 'dining', category: 'main', name: 'Bò bít tết sốt tiêu đen khoai tây', price: 129000, desc: 'Thịt thăn bò mềm mọng, sốt tiêu thơm lừng và khoai tây múi cau', icon: '🥩', salePercent: 0 },
+  { id: 12, section: 'dining', category: 'main', name: 'Mì Ý sốt bò bằm Spaghetti', price: 79000, desc: 'Mì Ý truyền thống sốt thịt bò bằm cà chua phô mai Parmesan', icon: '🍝', salePercent: 0 },
+  { id: 13, section: 'dining', category: 'main', name: 'Club Sandwich gà nướng phô mai', price: 55000, desc: 'Bánh kẹp 3 tầng thịt gà nướng, xà lách, cà chua và sốt mayo', icon: '🥪', salePercent: 0 },
+  { id: 14, section: 'dining', category: 'snack', name: 'Đĩa trái cây tươi nhiệt đới', price: 49000, desc: 'Dưa hấu, thanh long, xoài cát và nho tươi mát lạnh', icon: '🍉', salePercent: 0 },
+  { id: 15, section: 'dining', category: 'beverage', name: 'Cà phê Robusta Đắk Lắk pha phin', price: 30000, desc: 'Cà phê nguyên chất đậm đà, dùng kèm sữa đặc hoặc đá', icon: '☕', salePercent: 0 },
+  { id: 16, section: 'dining', category: 'beverage', name: 'Trà lài mật ong chanh vàng', price: 35000, desc: 'Trà hoa lài ủ lạnh thanh mát cùng mật ong rừng và chanh vàng', icon: '🫖', salePercent: 0 },
+  { id: 17, section: 'dining', category: 'beverage', name: 'Rượu vang đỏ Chile (Ly)', price: 85000, desc: 'Vang đỏ Cabernet Sauvignon hảo hạng phục vụ cùng ly pha lê', icon: '🍷', salePercent: 0 },
+  { id: 18, section: 'dining', category: 'minibar', name: 'Nước ngọt lon Minibar (Coca/7Up)', price: 20000, desc: 'Lon 330ml ướp lạnh sẵn sàng', icon: '🥤', salePercent: 0 },
+  { id: 19, section: 'dining', category: 'minibar', name: 'Bia Heineken lon Minibar', price: 35000, desc: 'Bia Heineken Silver 330ml ướp lạnh', icon: '🍺', salePercent: 0 },
+  { id: 20, section: 'dining', category: 'minibar', name: 'Nước khoáng thiên nhiên cao cấp', price: 15000, desc: 'Chai nước khoáng tinh khiết đóng chai 500ml', icon: '💧', salePercent: 0 }
 ];
 
-if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, JSON.stringify({ menu: seedMenu, orders: [] }, null, 2));
+// Khởi tạo hoặc cập nhật data.json sang dữ liệu khách sạn
+fs.writeFileSync(DATA_FILE, JSON.stringify({ menu: seedServices, orders: [] }, null, 2));
+
 const readStore = () => JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
 const writeStore = store => fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2));
 const sendJson = (res, status, value) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(value)); };
@@ -56,7 +62,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
   try {
-    if (req.method === 'GET' && url.pathname === '/api/health') return sendJson(res, 200, { ok: true, app: 'Cloud Kitchen POS', port: PORT, time: new Date().toISOString() });
+    if (req.method === 'GET' && url.pathname === '/api/health') return sendJson(res, 200, { ok: true, app: 'Cloud Hotel & Resort Room Service', port: PORT, time: new Date().toISOString() });
     if (req.method === 'GET' && url.pathname === '/api/network') {
       const allAddresses = Object.values(os.networkInterfaces()).flat().filter(item => item && item.family === 'IPv4' && !item.internal).map(item => item.address);
       const lanAddresses = allAddresses.filter(ip => !ip.startsWith('169.254.'));
@@ -67,7 +73,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/api/session') return sendJson(res, 200, { staff: isStaff(req) });
     if (req.method === 'POST' && url.pathname === '/api/login') {
       const body = await readBody(req);
-      if (String(body.pin || '') !== STAFF_PIN) return sendJson(res, 401, { error: 'Mã nhân viên không đúng.' });
+      if (String(body.pin || '') !== STAFF_PIN) return sendJson(res, 401, { error: 'Mã nhân viên khách sạn không đúng.' });
       const token = crypto.randomBytes(32).toString('hex'); sessions.set(token, Date.now() + 12 * 60 * 60 * 1000);
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Set-Cookie': `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`, 'Cache-Control': 'no-store' }); return res.end(JSON.stringify({ ok: true }));
     }
@@ -77,38 +83,38 @@ const server = http.createServer(async (req, res) => {
       const store = readStore();
       if (isStaff(req)) return sendJson(res, 200, { orders: store.orders });
       const table = url.searchParams.get('table');
-      if (!table) return sendJson(res, 401, { error: 'Chỉ nhân viên mới xem được toàn bộ đơn.' });
+      if (!table) return sendJson(res, 401, { error: 'Chỉ nhân viên mới xem được toàn bộ yêu cầu.' });
       return sendJson(res, 200, { orders: store.orders.filter(order => order.table === table) });
     }
     if (req.method === 'GET' && url.pathname === '/api/events') {
       const staff = isStaff(req); const table = url.searchParams.get('table');
-      if (!staff && !table) return sendJson(res, 401, { error: 'Thiếu mã bàn.' });
+      if (!staff && !table) return sendJson(res, 401, { error: 'Thiếu mã số phòng.' });
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
       res.write('retry: 3000\n\n'); const client = { res, staff, table }; streams.add(client); const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 20000);
       req.on('close', () => { clearInterval(heartbeat); streams.delete(client); }); return;
     }
     if (req.method === 'POST' && url.pathname === '/api/orders') {
       const body = await readBody(req); const table = String(body.table || '').trim();
-      if (!/^Bàn (0[1-9]|1[0-2])$/.test(table) || !Array.isArray(body.items) || !body.items.length) return sendJson(res, 400, { error: 'Bàn hoặc danh sách món không hợp lệ.' });
+      if (!table || !Array.isArray(body.items) || !body.items.length) return sendJson(res, 400, { error: 'Số phòng hoặc danh sách dịch vụ không hợp lệ.' });
       const store = readStore(); const items = [];
       for (const row of body.items) {
         const menuItem = store.menu.find(item => item.id === Number(row.id) && item.available !== false);
         const qty = Math.max(1, Math.min(50, Number(row.qty) || 1));
-        if (!menuItem) return sendJson(res, 400, { error: 'Có món đã hết hàng hoặc không còn trong thực đơn.' });
+        if (!menuItem) return sendJson(res, 400, { error: 'Có dịch vụ tạm thời không khả dụng.' });
         const unitPrice = Math.round(menuItem.price * (100 - (menuItem.salePercent || 0)) / 100);
         items.push({ id: menuItem.id, name: menuItem.name, section: menuItem.section, category: menuItem.category, qty, note: String(row.note || '').slice(0, 120), listPrice: menuItem.price, salePercent: menuItem.salePercent || 0, unitPrice, total: unitPrice * qty });
       }
       const subtotal = items.reduce((sum, item) => sum + item.total, 0); const promotionDiscount = items.reduce((sum, item) => sum + Math.round(item.listPrice * item.qty * item.salePercent / 100), 0);
-      const order = { id: `ORD-${Date.now().toString().slice(-7)}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`, table, items, subtotal, promotionDiscount, voucherCode: '', voucherDiscount: 0, discountTotal: promotionDiscount, totalPrice: subtotal, createdAt: new Date().toISOString(), status: 'pending', stations: { food: items.some(item => item.section === 'food') ? 'pending' : null, drink: items.some(item => item.section === 'drink') ? 'pending' : null } };
+      const order = { id: `SRV-${Date.now().toString().slice(-7)}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`, table, items, subtotal, promotionDiscount, voucherCode: '', voucherDiscount: 0, discountTotal: promotionDiscount, totalPrice: subtotal, createdAt: new Date().toISOString(), status: 'pending', stations: { housekeeping: items.some(item => item.section === 'housekeeping') ? 'pending' : null, dining: items.some(item => item.section === 'dining') ? 'pending' : null } };
       store.orders.unshift(order); writeStore(store); broadcast(order); return sendJson(res, 201, { order });
     }
     const stationRoute = url.pathname.match(/^\/api\/orders\/([^/]+)\/station$/);
     if (req.method === 'PATCH' && stationRoute) {
-      if (!isStaff(req)) return sendJson(res, 401, { error: 'Cần đăng nhập nhân viên.' });
+      if (!isStaff(req)) return sendJson(res, 401, { error: 'Cần đăng nhập nhân viên khách sạn.' });
       const body = await readBody(req); const station = body.station; const status = body.status;
-      if (!['food', 'drink'].includes(station) || !['pending', 'cooking', 'ready'].includes(status)) return sendJson(res, 400, { error: 'Trạng thái khu bếp không hợp lệ.' });
+      if (!['housekeeping', 'dining'].includes(station) || !['pending', 'cooking', 'ready'].includes(status)) return sendJson(res, 400, { error: 'Trạng thái bộ phận không hợp lệ.' });
       const store = readStore(); const order = store.orders.find(row => row.id === decodeURIComponent(stationRoute[1]));
-      if (!order || !order.stations[station]) return sendJson(res, 404, { error: 'Không tìm thấy phiếu bếp.' });
+      if (!order || !order.stations[station]) return sendJson(res, 404, { error: 'Không tìm thấy phiếu yêu cầu dịch vụ.' });
       order.stations[station] = status;
       const states = Object.values(order.stations).filter(Boolean);
       order.status = states.every(state => state === 'ready') ? 'ready' : states.some(state => state === 'cooking' || state === 'ready') ? 'cooking' : 'pending';
@@ -116,15 +122,14 @@ const server = http.createServer(async (req, res) => {
     }
     const payRoute = url.pathname.match(/^\/api\/orders\/([^/]+)\/pay$/);
     if (req.method === 'POST' && payRoute) {
-      if (!isStaff(req)) return sendJson(res, 401, { error: 'Cần đăng nhập nhân viên.' });
+      if (!isStaff(req)) return sendJson(res, 401, { error: 'Cần đăng nhập nhân viên lễ tân.' });
       const body = await readBody(req); const store = readStore(); const order = store.orders.find(row => row.id === decodeURIComponent(payRoute[1]));
-      if (!order) return sendJson(res, 404, { error: 'Không tìm thấy hóa đơn.' });
-      if (order.status === 'paid') return sendJson(res, 409, { error: 'Hóa đơn này đã thanh toán.' });
-      if (order.status !== 'ready' && order.status !== 'served') return sendJson(res, 409, { error: 'Chỉ thanh toán khi các món đã sẵn sàng.' });
+      if (!order) return sendJson(res, 404, { error: 'Không tìm thấy hóa đơn phòng.' });
+      if (order.status === 'paid') return sendJson(res, 409, { error: 'Hóa đơn này đã thanh toán lúc check-out.' });
       const code = String(body.voucherCode || '').trim().toUpperCase(); let voucherDiscount = 0;
-      if (code === 'WELCOME10') voucherDiscount = Math.min(Math.round(order.totalPrice * 0.1), 30000);
-      else if (code === 'COMBO20' && order.totalPrice >= 120000) voucherDiscount = 20000;
-      else if (code) return sendJson(res, 400, { error: 'Mã voucher không hợp lệ hoặc chưa đủ điều kiện.' });
+      if (code === 'HOTEL10') voucherDiscount = Math.min(Math.round(order.totalPrice * 0.1), 50000);
+      else if (code === 'VIPSTAY' && order.totalPrice >= 200000) voucherDiscount = 50000;
+      else if (code) return sendJson(res, 400, { error: 'Mã ưu đãi không hợp lệ.' });
       order.voucherCode = code; order.voucherDiscount = voucherDiscount; order.discountTotal = order.promotionDiscount + voucherDiscount;
       order.amountPaid = Math.max(0, order.totalPrice - voucherDiscount); order.status = 'paid'; order.paidAt = new Date().toISOString(); updateOrder(store, order); return sendJson(res, 200, { order });
     }
@@ -144,8 +149,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.on('error', error => {
-  if (error.code === 'EADDRINUSE') console.error(`Cổng ${PORT} đang được dùng. Hãy đóng cửa sổ POS cũ hoặc đổi PORT trong môi trường rồi chạy lại.`);
-  else console.error('Không thể khởi động Cloud POS:', error.message);
+  if (error.code === 'EADDRINUSE') console.error(`Cổng ${PORT} đang được dùng.`);
+  else console.error('Không thể khởi động Cloud Hotel POS:', error.message);
   process.exitCode = 1;
 });
-server.listen(PORT, '0.0.0.0', () => console.log(`Cloud POS running at http://localhost:${PORT} (staff PIN configured)`));
+server.listen(PORT, '0.0.0.0', () => console.log(`Cloud Hotel Room Service running at http://localhost:${PORT}`));
