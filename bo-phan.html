@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Khu vực nhân viên · Grand Cloud Hotel</title>
+  <link rel="stylesheet" href="style.css"><script src="runtime.js?v=20261103g"></script>
+</head>
+<body class="staff-portal-body">
+  <main class="staff-portal">
+    <header class="staff-portal-header"><div class="kds-mark">GH</div><div><p class="eyebrow">GRAND CLOUD HOTEL · INTERNAL</p><h1>Khu vực nội bộ khách sạn</h1><p>Chọn đúng bộ phận để vào màn hình công việc. Tài khoản nhân viên chỉ xem chức năng được cấp; quản lý xem toàn hệ thống.</p></div></header>
+    <div id="portalSession" class="portal-session" hidden><span id="portalSessionLabel"></span><button id="portalLogout" type="button">Đăng xuất để đổi bộ phận</button></div>
+    <section class="staff-portal-grid" aria-label="Các bộ phận">
+      <a class="staff-department-card" href="staff-login.html?role=receptionist&amp;next=%2Fletan.html"><span>🛎️</span><b>Tiếp tân</b><small>Phòng trống · nhận/trả khách · QR · xác nhận thu tiền dịch vụ</small><strong>Mở Tiếp tân →</strong></a>
+      <a class="staff-department-card" href="staff-login.html?role=cashier&amp;next=%2Fthu-ngan.html"><span>🧾</span><b>Thu ngân</b><small>Hóa đơn dịch vụ · mã ưu đãi · xác nhận thanh toán · in phiếu</small><strong>Mở Thu ngân →</strong></a>
+      <a class="staff-department-card" href="staff-login.html?role=kitchen&amp;next=%2Fvan-hanh.html"><span>🍽️</span><b>Bếp &amp; Ẩm thực</b><small>Tiếp nhận món · chế biến · xác nhận giao món cho phòng</small><strong>Mở mục Bếp →</strong></a>
+      <a class="staff-department-card" href="staff-login.html?role=housekeeping&amp;next=%2Fvan-hanh.html"><span>🧹</span><b>Buồng phòng</b><small>Vệ sinh · tiện ích · giặt ủi · xác nhận phòng sạch</small><strong>Mở mục Buồng phòng →</strong></a>
+      <a class="staff-department-card manager-department-card" href="staff-login.html?role=manager&amp;next=%2Fmanager.html"><span>📊</span><b>Quản lý</b><small>Doanh thu · tồn kho · tình trạng phòng · tổng hợp mọi bộ phận</small><strong>Mở bảng Quản lý →</strong></a>
+    </section>
+    <a class="portal-home-link" href="home.html">← Về trang chủ khách sạn</a>
+  </main>
+  <script>
+    (async () => {
+      try {
+        const response = await fetch('/api/session', { credentials:'include', cache:'no-store' });
+        const session = await response.json(); if (!session.staff) return;
+        const labels = { receptionist:'Tiếp tân', cashier:'Thu ngân', kitchen:'Bếp & Ẩm thực', housekeeping:'Buồng phòng', manager:'Quản lý' };
+        document.getElementById('portalSessionLabel').textContent = `Đang đăng nhập: ${labels[session.role] || 'Nhân viên'}`;
+        document.getElementById('portalSession').hidden = false;
+      } catch (_) {}
+    })();
+    document.getElementById('portalLogout').addEventListener('click', async () => {
+      await fetch('/api/logout', { method:'POST', credentials:'include' });
+      location.reload();
+    });
+  </script>
+</body>
+</html>

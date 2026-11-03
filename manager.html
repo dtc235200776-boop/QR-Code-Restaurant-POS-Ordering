@@ -3,22 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lễ tân &amp; Quyết toán phòng · Grand Cloud Hotel</title>
+  <title>Quản lý khách sạn · Grand Cloud Hotel</title>
   <link rel="stylesheet" href="style.css">
+  <script src="runtime.js?v=20261103g"></script>
 </head>
 <body class="admin-body professional-admin">
   <header class="admin-header">
     <div class="admin-brand">
       <div class="kds-mark">GH</div>
       <div>
-        <p class="eyebrow">GRAND HOTEL · FRONT DESK &amp; BILLING</p>
-        <h1>Lễ tân &amp; Quản lý dịch vụ phòng</h1>
+        <p class="eyebrow">GRAND HOTEL · MANAGER DASHBOARD</p>
+        <h1>Quản lý toàn khách sạn</h1>
         <span id="cashierConnection" class="connection-state">Đang kết nối hệ thống khách sạn…</span>
       </div>
     </div>
     <nav class="staff-nav">
-      <a href="kitchen.html">Buồng phòng &amp; Phục vụ</a>
-      <a href="qrcodes/">In QR phòng</a>
+      <a href="bo-phan.html">Cổng nội bộ</a>
+      <a href="letan.html">Tiếp tân &amp; QR</a>
+      <a href="thu-ngan.html">Thu ngân</a>
+      <a href="van-hanh.html">Điều phối Bếp &amp; Buồng phòng</a>
       <button id="cashierLogout" class="staff-logout">Đăng xuất</button>
     </nav>
   </header>
@@ -42,18 +45,30 @@
       </article>
     </section>
 
+    <section class="manager-workbench">
+      <div class="section-heading"><div><p class="eyebrow">VIỆC CẦN THEO DÕI</p><h2>Ưu tiên vận hành hôm nay</h2></div></div>
+      <ul id="managerTasks" class="manager-task-list"><li>Đang tổng hợp tình hình khách sạn…</li></ul>
+    </section>
+
     <section class="admin-section">
       <div class="section-heading">
         <div>
           <p class="eyebrow">SƠ ĐỒ LƯU TRÚ</p>
-          <h2>Tình trạng các phòng (Phòng 101 - 112)</h2>
+          <h2>Sơ đồ phòng &amp; tình trạng lưu trú</h2>
         </div>
         <div class="legend">
-          <i class="free-dot"></i> Phòng trống 
-          <i class="busy-dot"></i> Đang có yêu cầu dịch vụ
+          <i class="free-dot"></i> Trống
+          <i class="busy-dot"></i> Có khách
+          <span>· Chờ dọn / bảo trì được tô màu riêng</span>
         </div>
       </div>
       <div id="tablesGrid" class="tables-grid"></div>
+    </section>
+
+    <section class="admin-section inventory-section">
+      <div class="section-heading"><div><p class="eyebrow">TỒN KHO BUỒNG PHÒNG · BẾP · MINIBAR</p><h2>Hàng hóa cần bổ sung</h2></div><span id="inventoryLowCount" class="inventory-low-count">0 mặt hàng cần bổ sung</span></div>
+      <div id="inventoryAlerts" class="inventory-alerts"></div>
+      <div id="inventoryGrid" class="inventory-grid"></div>
     </section>
 
     <section class="admin-section">

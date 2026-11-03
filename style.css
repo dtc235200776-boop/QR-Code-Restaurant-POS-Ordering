@@ -656,6 +656,8 @@ body {
 .bill-card ul { list-style: none; margin: 12px 0; display: grid; gap: 7px; font-size: 13px; }
 .bill-card li small { display: inline; }.bill-card footer { border-top: 1px solid var(--border); padding-top: 12px; font-size: 13px; }
 .bill-card footer button { border: 0; color: white; background: #16a34a; border-radius: 8px; padding: 9px 11px; font-weight: 700; cursor: pointer; }
+.bill-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.bill-actions a { color:#9a5b22; font-size:12px; font-weight:800; text-decoration:none; }.bill-actions a:hover { text-decoration:underline; }
 .status-pill { border-radius: 20px; padding: 5px 9px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 700; }.status-pill.ready { background: #dcfce7; color: #166534; }
 .report-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }.report-card { padding: 16px; }.report-card h3 { font-size: 14px; margin-bottom: 14px; }
 .bar-chart { height: 190px; display: flex; align-items: end; justify-content: space-around; gap: 8px; border-bottom: 1px solid var(--border); }
@@ -725,6 +727,27 @@ body {
 .connection-state.connected { color: #4ade80; }
 .staff-logout { border: 1px solid #475569; border-radius: 9px; background: transparent; color: #e2e8f0; padding: 9px 13px; font-weight: 700; cursor: pointer; }
 .kds-main { max-width: 1640px; margin: 0 auto; padding: 22px clamp(16px, 3vw, 42px) 48px; }
+.ops-tabs { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 18px; }
+.ops-tabs button { display:flex; align-items:center; gap:10px; padding:11px 16px; border:1px solid #dbe3ee; border-radius:10px; background:#fff; color:#334155; font-weight:800; cursor:pointer; }
+.ops-tabs button.active { border-color:#9a5b22; background:#fff7ed; color:#8a4b16; box-shadow:0 2px 8px #9a5b2218; }
+.ops-tabs button b { display:grid; place-items:center; min-width:22px; height:22px; border-radius:99px; background:#e2e8f0; padding:0 6px; font-size:11px; }
+.ops-tabs button.active b { background:#b45309; color:white; }
+[data-station-panel][hidden], [data-room-turnover][hidden], [data-ops-tab][hidden] { display:none !important; }
+.staff-portal-body { min-height:100vh; padding:36px 18px; background:linear-gradient(145deg,#f4e8d8,#f8fafc 55%,#e9dfd1); }
+.staff-portal { max-width:1100px; margin:0 auto; }
+.staff-portal-header { display:flex; align-items:center; gap:18px; margin-bottom:22px; padding:25px; border:1px solid #ead9c4; border-radius:18px; background:#fff; box-shadow:0 10px 35px #54371912; }
+.staff-portal-header h1 { margin:0 0 7px; color:#172235; font-size:clamp(24px,4vw,34px); }
+.staff-portal-header p:last-child { margin:0; color:#64748b; line-height:1.6; }
+.staff-portal-header .eyebrow { color:#b45309; font-weight:800; letter-spacing:.12em; }
+.staff-portal-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+.staff-department-card { display:grid; gap:9px; min-height:185px; padding:20px; border:1px solid #ead9c4; border-radius:15px; background:#fff; color:#172235; text-decoration:none; box-shadow:0 5px 18px #5437190a; transition:transform .16s,border-color .16s,box-shadow .16s; }
+.staff-department-card:hover { transform:translateY(-3px); border-color:#b77943; box-shadow:0 10px 26px #54371916; }
+.staff-department-card > span { font-size:28px; }.staff-department-card b { font-size:19px; }.staff-department-card small { color:#64748b; line-height:1.55; }.staff-department-card strong { align-self:end; color:#9a5b22; font-size:13px; }
+.manager-department-card { border-color:#b99564; background:#fffaf2; }
+.portal-session { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 0 16px; padding:12px 16px; border-radius:10px; background:#eaf8ef; color:#166534; font-weight:700; }
+.portal-session[hidden] { display:none !important; }.portal-session button { border:0; border-radius:8px; padding:9px 12px; background:#166534; color:white; font-weight:700; cursor:pointer; }
+.portal-home-link { display:inline-block; margin-top:22px; color:#795334; text-decoration:none; }
+@media(max-width:600px){.staff-portal-header{align-items:flex-start;flex-direction:column;padding:20px}.portal-session{align-items:flex-start;flex-direction:column}}
 .kds-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
 .kds-stats article { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 15px 18px; border: 1px solid #334155; border-radius: 12px; background: #1e293b; color: #cbd5e1; }
 .kds-stats strong { color: white; font-size: 23px; }
@@ -747,7 +770,7 @@ body {
 .professional-admin .admin-section { border-radius: 14px; box-shadow: 0 3px 14px #0f172a0a; }.professional-admin .tables-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }.professional-admin .table-tile { min-height: 105px; }.professional-admin .bill-card { background: #fff; }.professional-admin .bill-card header { padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }.professional-admin .bill-card header strong { font-size: 16px; }.professional-admin .bill-card ul { margin-bottom: 15px; }.professional-admin .bill-card footer { border-top: 0; padding-top: 13px; }.professional-admin .bill-card footer > b { color: #64748b; font-size: 12px; }.bill-tabs { display: flex; gap: 5px; padding: 4px; border-radius: 10px; background: #f1f5f9; }.bill-tabs button { border: 0; border-radius: 7px; background: transparent; color: #475569; padding: 8px 12px; font-weight: 700; cursor: pointer; }.bill-tabs button.active { background: white; color: #9a4d08; box-shadow: 0 1px 3px #0f172a20; }
 .voucher-field { display: grid; gap: 6px; color: #475569; font-size: 11px; font-weight: 700; }.voucher-field input { width: 100%; border: 1px solid #cbd5e1; border-radius: 7px; padding: 9px 10px; font-size: 13px; }.payment-summary { display: grid; grid-template-columns: 1fr auto; gap: 5px; margin-top: 9px; color: #475569; font-size: 12px; }.payment-summary b { color: #0f172a; }.payment-summary small { grid-column: 1 / -1; color: #16a34a; }.paid-summary { display: flex; justify-content: space-between; gap: 8px; color: #64748b; font-size: 11px; }.paid-summary strong { color: #166534; }.sale-inline { color: #b45309 !important; }.sale-badge { position: absolute; top: 8px; right: 8px; border-radius: 7px; background: #dc2626; color: white; padding: 4px 7px; font-size: 11px; font-weight: 800; }.sold-out-badge { position: absolute; inset: auto 8px 8px; text-align: center; border-radius: 6px; background: #334155dd; color: white; padding: 4px; font-size: 11px; }.food-card.sold-out { opacity: .72; }.food-card .btn-add:disabled { background: #94a3b8; cursor: not-allowed; }.bill-card footer button:disabled { background: #94a3b8; cursor: not-allowed; }
 .professional-admin .status-pill.ready, .professional-admin .status-pill.served, .professional-admin .status-pill.paid { background: #dcfce7; color: #166534; }.promo-heading { margin-top: 24px; }.promo-list { list-style: none; display: grid; gap: 8px; }.promo-list li { display: flex; justify-content: space-between; gap: 10px; color: #475569; font-size: 12px; }.promo-list li span { color: #b45309; text-align: right; }
-.staff-login-body { min-height: 100vh; display: grid; place-items: center; padding: 20px; background: radial-gradient(circle at top, #293a52, #0f172a 65%); }.staff-login-card { width: min(420px, 100%); padding: 32px; border: 1px solid #334155; border-radius: 18px; background: #fff; box-shadow: 0 22px 60px #02061766; }.staff-login-icon { font-size: 30px; margin-bottom: 14px; }.staff-login-card h1 { margin: 4px 0 8px; font-size: 23px; }.staff-login-card > p:not(.eyebrow) { color: #64748b; font-size: 13px; }.staff-login-card form { display: grid; gap: 10px; margin: 24px 0 16px; }.staff-login-card label { font-size: 12px; font-weight: 700; }.staff-login-card input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 18px; letter-spacing: .2em; }.staff-login-card form button { padding: 12px; border: 0; border-radius: 9px; background: #b45309; color: white; font-weight: 800; cursor: pointer; }.staff-login-card form button:disabled { opacity: .65; }.staff-login-card #loginError { color: #dc2626; font-size: 12px; }.staff-login-card > a { color: #64748b; font-size: 12px; text-decoration: none; }
+.staff-login-body { min-height: 100vh; display: grid; place-items: center; padding: 20px; background: radial-gradient(circle at top, #293a52, #0f172a 65%); }.staff-login-card { width: min(420px, 100%); padding: 32px; border: 1px solid #334155; border-radius: 18px; background: #fff; box-shadow: 0 22px 60px #02061766; }.staff-login-icon { font-size: 30px; margin-bottom: 14px; }.staff-login-card h1 { margin: 4px 0 8px; font-size: 23px; }.staff-login-card > p:not(.eyebrow) { color: #64748b; font-size: 13px; }.staff-login-card form { display: grid; gap: 10px; margin: 24px 0 16px; }.staff-login-card label { font-size: 12px; font-weight: 700; }.staff-login-card input { padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 18px; letter-spacing: normal; }.staff-login-card form button { padding: 12px; border: 0; border-radius: 9px; background: #b45309; color: white; font-weight: 800; cursor: pointer; }.staff-login-card form button:disabled { opacity: .65; }.staff-login-card #loginError { color: #dc2626; font-size: 12px; }.staff-login-card > a { color: #64748b; font-size: 12px; text-decoration: none; }
 .staff-login-card .login-demo-hint { padding: 10px 12px; margin: 0 0 18px; border-radius: 9px; background: #fff7ed; color: #9a3412; }
 .receipt-print { display: none; }.print-receipt, .receipt-button { border: 1px solid #cbd5e1; border-radius: 7px; background: white; color: #334155; padding: 7px 10px; font-weight: 700; cursor: pointer; }.customer-order-card .print-receipt { grid-column: auto; align-self: end; }
 .connection-error { padding: 14px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 13px; }
@@ -784,6 +807,12 @@ body:not(.professional-kitchen):not(.professional-admin) { background: linear-gr
 .professional-kitchen .ticket-card li { color: #1e293b; }
 .professional-kitchen .ticket-card footer { border-top-color: #e8edf3; }
 .professional-kitchen .station-empty { color: #64748b; }.professional-kitchen .station-empty b { color: #334155; }.professional-kitchen .station-empty span { background: #ecfdf5; }
+.professional-kitchen .turnover-panel { min-height: unset; margin-top: 16px; padding: 0 18px 18px; border-top: 4px solid #53839b; }
+.turnover-rooms { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; }
+.turnover-room { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px; border:1px solid #dce5eb; border-radius:11px; background:#f8fbfd; }
+.turnover-room > div { display:grid; gap:4px; }.turnover-room strong { color:#28465a; font-size:13px; }.turnover-room small { color:#728393; font-size:10px; }
+.turnover-room button { padding:9px 11px; border:0; border-radius:8px; background:#39718e; color:#fff; font-size:10px; font-weight:800; cursor:pointer; }
+.turnover-room button:disabled { opacity:.6; }
 @media (max-width: 640px) { .menu-section { padding: 14px 10px; margin-top: 12px; border-radius: 14px; } }
 
 /* QR entry point: make the table-specific ordering step visible before a guest adds items. */
@@ -798,6 +827,82 @@ body:not(.professional-kitchen):not(.professional-admin) { background: linear-gr
 .table-entry-guide.guide-attention { transform: scale(1.01); box-shadow: 0 0 0 5px #f59e0b33, 0 10px 30px #92400e20; }
 .food-price del { display: inline-block; margin-left: 7px; color: #94a3b8; font-size: 11px; font-weight: 500; }
 @media (max-width: 640px) { .app-header { flex-wrap: wrap; }.table-entry-guide { align-items: flex-start; flex-direction: column; margin: 12px; }.qr-protected-note { white-space: normal; } }
+.staff-entry-link { color: #8b4b12; font-size: 12px; font-weight: 700; text-decoration: none; padding: 9px 12px; border: 1px solid #ead9c5; border-radius: 10px; background: #fff; }
+.professional-admin .table-tile { color: inherit; text-decoration: none; }
+.professional-admin .table-tile.cleaning { border-color:#93c5dc; background:#eff9fd; color:#245c75; }.professional-admin .table-tile.maintenance { border-color:#f0b5a5; background:#fff3ef; color:#8c3f30; }
+.manager-workbench { margin:18px 0 4px; padding:20px; border:1px solid #eadfce; border-radius:14px; background:#fffdf9; box-shadow:0 3px 14px #5437190b; }
+.manager-workbench .section-heading { margin-bottom:12px; }.manager-task-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:9px; list-style:none; }
+.manager-task-list li { padding:12px 14px; border-left:3px solid #bc8651; border-radius:8px; background:#fbf5ec; color:#614a32; font-size:12px; line-height:1.5; }
+.manager-task-list li.task-ok { border-color:#6c9871; background:#f1f7f0; color:#45664a; }
+.inventory-low-count { padding:8px 11px; border-radius:999px; background:#fff1df; color:#9b572a; font-size:11px; font-weight:800; }
+.inventory-alerts { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }.inventory-alerts:empty { display:none; }
+.inventory-alert { padding:8px 11px; border:1px solid #efd0a7; border-radius:9px; background:#fff8ec; color:#8f5825; font-size:11px; font-weight:700; }
+.inventory-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(225px,1fr)); gap:10px; }
+.inventory-item { display:grid; grid-template-columns:1fr auto; gap:6px 10px; padding:14px; border:1px solid #e6e0d6; border-radius:11px; background:#fff; }
+.inventory-item.low { border-color:#efc5a5; background:#fffaf5; }.inventory-item strong { color:#3f352a; font-size:13px; }.inventory-item small { color:#8a7b68; font-size:10px; }
+.inventory-stock { display:flex; align-items:center; gap:7px; grid-row:span 2; }.inventory-stock b { min-width:45px; text-align:center; color:#62452e; font-size:14px; }.inventory-stock button { width:28px; height:28px; border:1px solid #decdb6; border-radius:7px; background:#faf5ed; color:#67482e; font-weight:900; cursor:pointer; }
+.inventory-item.low .inventory-stock b { color:#b34c32; }
+.staff-login-card select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 14px; background: #fff; }
+
+/* Warm wood finish for the QR guest experience. */
+body:not(.professional-kitchen):not(.professional-admin):not(.hotel-home) { background: linear-gradient(180deg,#f2e8d9 0,#f7f1e8 260px,#eee4d7 100%); }
+body:not(.professional-kitchen):not(.professional-admin):not(.hotel-home) .app-header { background: #493321; color: #fffaf2; box-shadow: 0 5px 20px #33201226; }
+body:not(.professional-kitchen):not(.professional-admin):not(.hotel-home) .app-header .brand-title { color: #fffaf2; }
+body:not(.professional-kitchen):not(.professional-admin):not(.hotel-home) .brand-sub { color: #dcc9ae; }
+body:not(.professional-kitchen):not(.professional-admin):not(.hotel-home) .table-badge { background: #62452e; border-color: #806345; color: #fff3df; }
+body:not(.professional-kitchen):not(.professional-admin):not(.hotel-home) .staff-entry-link,
+.home-entry-link { color: #f7e8d1; background: #62452e; border: 1px solid #806345; border-radius: 10px; padding: 9px 12px; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.home-entry-link:hover { background: #79583c; }
+.service-switcher { position: sticky; top: 68px; z-index: 38; display: flex; justify-content: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #dfceb8; background: #f8f3ebf5; backdrop-filter: blur(12px); }
+.service-switcher a { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 20px; border: 1px solid #ddc9ae; border-radius: 999px; background: #fffdf8; color: #705139; text-decoration: none; font-size: 13px; font-weight: 800; transition: .18s ease; }
+.service-switcher a:hover,.service-switcher a.active { border-color: #65442b; background: #65442b; color: #fff8ed; box-shadow: 0 5px 14px #54371924; }
+body[data-service-view="housekeeping"] #drinkSection, body[data-service-view="dining"] #foodSection { display: none; }
+.menu-section { background: #fffaf2; border-color: #e5d4bd; box-shadow: 0 12px 30px #6043270b; }
+.menu-section { scroll-margin-top: 142px; }
+.menu-section .food-card { overflow: hidden; border-color: #e6d5bd; box-shadow: 0 5px 16px #593b2110; }
+.menu-section .food-img-wrap { background: linear-gradient(145deg,#f5e7d2,#e8d9c6); color: #67482e; }
+.menu-section .food-img-wrap .menu-illustration { display: block; width: 76px; height: 76px; }
+.menu-section .btn-add,.btn-checkout,.btn-primary { background: #88582f; }
+.menu-section .btn-add:hover,.btn-checkout:hover,.btn-primary:hover { background: #684326; }
+.section-kicker,.eyebrow-wood { color: #9a6337; }
+.menu-jump a { color: #67472f; background: #fff9ef; border-color: #dec7a9; }
+.welcome-banner { border-color: #dec4a1; background: linear-gradient(115deg,#f0dfc5,#fff8ed 72%); color: #573c27; }
+.table-entry-guide { border-color: #dbc3a3; background: linear-gradient(105deg,#f1e0c7,#fff8ed); color: #63462e; }
+.category-nav .cat-btn.active { background: #8b5b35; border-color: #8b5b35; }
+.food-price { color: #82532f; }
+
+/* Hotel landing page: compact booking tool and a wood-and-linen palette. */
+.hotel-home { --wood:#543922; --wood-light:#8b623e; --sand:#f4ebdd; margin:0; background:#f7f3ed; color:#2e2923; font-family:'Plus Jakarta Sans',sans-serif; }
+.home-topline { display:flex; justify-content:space-between; padding:8px clamp(18px,6vw,96px); background:#402d1e; color:#e7d5bc; font-size:10px; letter-spacing:.08em; }
+.home-topline a { color:#f5e6d2; text-decoration:none; }
+.home-header { position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:28px; padding:14px clamp(18px,6vw,96px); background:#fffdf9f2; border-bottom:1px solid #eadfce; backdrop-filter:blur(14px); }
+.home-brand { display:flex; align-items:center; gap:10px; color:#493321; text-decoration:none; white-space:nowrap; }
+.home-brand > span:first-child { display:grid; place-items:center; width:39px; height:39px; border:1px solid #ba976c; border-radius:50%; color:#9c754c; font:500 24px Georgia,serif; }
+.home-brand b,.home-brand small { display:block; letter-spacing:.11em; }.home-brand b { font-size:12px; }.home-brand small { margin-top:3px; color:#967a5c; font-size:8px; }
+.home-header nav { display:flex; flex-wrap:wrap; justify-content:center; gap:clamp(12px,2vw,30px); }
+.home-header nav a { color:#605344; font-size:11px; font-weight:700; text-decoration:none; }.home-header nav a:hover,.home-header nav a.current { color:#976238; }
+.home-book-link { padding:11px 16px; border-radius:7px; background:#62452e; color:#fff8ed; text-decoration:none; font-size:11px; font-weight:800; white-space:nowrap; }.home-book-link span { margin-left:12px; }
+.home-hero { position:relative; min-height:clamp(500px,58vw,700px); overflow:hidden; display:flex; align-items:center; padding:70px clamp(22px,10vw,160px); background:#39484a; color:white; }
+.hero-suite-art,.hero-shade { position:absolute; inset:0; width:100%; height:100%; }.hero-suite-art { object-fit:cover; object-position:center 57%; }.hero-shade { background:linear-gradient(90deg,#1c2927d9 0%,#26312cb3 43%,#30332a26 100%),linear-gradient(0deg,#1e1c18a8,transparent 40%); }
+.hero-copy { position:relative; z-index:1; width:min(540px,70%); }.hero-kicker { display:flex; align-items:center; gap:9px; color:#e9c89f; font-size:10px; font-weight:700; letter-spacing:.18em; }.hero-kicker i { width:25px; height:1px; background:#d5ae7d; }
+.hero-copy h1 { margin:20px 0 14px; font:500 clamp(44px,6.1vw,82px)/1.04 Georgia,serif; letter-spacing:-.045em; }.hero-copy h1 em,.experience-intro h2 em { color:#e2bd8d; font-weight:400; }.hero-copy p { max-width:430px; color:#f1e9dc; font-size:14px; line-height:1.8; }
+.hero-actions { display:flex; align-items:center; flex-wrap:wrap; gap:22px; margin-top:30px; }.button-wood { display:inline-flex; align-items:center; justify-content:space-between; gap:22px; border:0; border-radius:7px; padding:14px 18px; background:#96663e; color:white; text-decoration:none; font:700 12px 'Plus Jakarta Sans',sans-serif; cursor:pointer; }.button-wood:hover { background:#795331; }.hero-text-link { color:#fff5e8; font-size:11px; text-decoration:none; }.hero-text-link span { padding-left:6px; }
+.hero-caption { position:absolute; z-index:1; bottom:27px; left:clamp(22px,10vw,160px); display:flex; align-items:center; gap:13px; color:#f0dfc7; font-size:10px; }.hero-caption i { width:55px; height:1px; background:#dfbd91; }.hero-seal { position:absolute; right:7%; bottom:12%; display:grid; place-items:center; width:94px; height:94px; border:1px solid #e5c89c99; border-radius:50%; color:#fff0d9; }.hero-seal span { font:26px Georgia,serif; }.hero-seal small { font-size:7px; letter-spacing:.18em; text-align:center; }
+.booking-shell { position:relative; z-index:2; width:min(1320px,calc(100% - 40px)); margin:-1px auto 0; padding:26px clamp(18px,3vw,38px) 20px; border:1px solid #e9ddcd; border-top:0; border-radius:0 0 16px 16px; background:#fffdf9; box-shadow:0 15px 40px #4b32160d; }.booking-heading { margin-bottom:17px; }.eyebrow-wood { font-size:9px; font-weight:800; letter-spacing:.17em; }.booking-heading h2 { margin:5px 0 0; color:#443528; font:500 25px Georgia,serif; }
+.booking-form { display:grid; grid-template-columns:repeat(5,minmax(120px,1fr)) auto; align-items:end; gap:10px; }.booking-form label { display:grid; gap:7px; min-width:0; }.booking-form label span { color:#796750; font-size:9px; font-weight:800; }.booking-form input,.booking-form select { width:100%; min-width:0; height:43px; padding:0 10px; border:1px solid #e4d7c5; border-radius:6px; background:#fffefa; color:#43382e; font:500 11px 'Plus Jakarta Sans',sans-serif; }.booking-submit { min-height:43px; padding:0 16px; white-space:nowrap; }.booking-note { margin:11px 0 0; color:#9a8976; font-size:9px; }.booking-result { margin-top:12px; padding:12px 14px; border:1px solid #d8c5a8; border-radius:8px; background:#faf1e5; color:#62452e; font-size:12px; }.booking-result[hidden] { display:none; }
+.home-experience { display:grid; grid-template-columns:1.1fr 1fr 1fr; gap:16px; max-width:1320px; margin:78px auto; padding:0 20px; }.experience-intro { padding:22px 28px 20px 0; }.experience-intro h2 { margin:12px 0; color:#48392b; font:500 clamp(32px,4vw,48px)/1.12 Georgia,serif; }.experience-intro h2 em { color:#9a704b; }.experience-intro p { max-width:340px; color:#796d60; font-size:12px; line-height:1.8; }.text-link-wood { display:inline-block; margin-top:14px; color:#765131; font-size:11px; font-weight:800; text-decoration:none; }.text-link-wood span { padding-left:10px; }
+.experience-card { position:relative; min-height:270px; padding:28px; overflow:hidden; border:1px solid #e5d4bb; border-radius:12px; background:linear-gradient(145deg,#efe0ca,#f9f3e9 75%); color:#503b28; text-decoration:none; transition:transform .2s,box-shadow .2s; }.experience-card:hover { transform:translateY(-4px); box-shadow:0 18px 35px #4b321619; }.experience-card::after { content:''; position:absolute; right:-44px; bottom:-90px; width:210px; height:210px; border:1px solid #a9805544; border-radius:50%; box-shadow:0 0 0 22px #a9805510,0 0 0 45px #a980550a; }.dining-card { background:linear-gradient(145deg,#e6e0d2,#f6f0e6 75%); }.experience-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:50%; background:#fff8ed; color:#976741; font-size:22px; }.card-number { position:absolute; top:33px; right:30px; color:#a58c70; font-size:10px; letter-spacing:.1em; }.experience-card h3 { margin:26px 0 9px; font:500 25px/1.18 Georgia,serif; }.experience-card p { max-width:250px; color:#796b5b; font-size:11px; line-height:1.7; }.card-arrow { position:absolute; right:28px; bottom:25px; color:#815a38; font-size:20px; }
+.home-footer { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:22px clamp(20px,6vw,90px); border-top:1px solid #e8ddcf; background:#f1e8dc; }.home-footer > span { color:#826e58; font-size:10px; }.home-footer > a:last-child { color:#755233; font-size:10px; font-weight:800; text-decoration:none; }
+@media(max-width:900px){.home-header{gap:12px}.home-header nav{gap:10px}.home-header nav a{font-size:9px}.booking-form{grid-template-columns:repeat(3,minmax(120px,1fr))}.booking-submit{min-height:42px}.home-experience{grid-template-columns:1fr 1fr}.experience-intro{grid-column:1/-1;padding-bottom:4px}}
+@media(max-width:640px){.home-topline{padding:8px 16px}.home-header{position:relative;flex-wrap:wrap;padding:12px 16px}.home-header nav{order:3;width:100%;justify-content:flex-start;overflow:auto;padding:4px 0}.home-header nav a{white-space:nowrap}.home-book-link{margin-left:auto;padding:9px 11px}.home-hero{min-height:570px;padding:48px 22px;align-items:flex-end}.hero-suite-art{object-position:60% center}.hero-shade{background:linear-gradient(0deg,#1e2725e8 2%,#28302c9c 50%,#27332c30 100%)}.hero-copy{width:100%;padding-bottom:55px}.hero-copy h1{font-size:57px}.hero-copy p{font-size:12px}.hero-seal{right:20px;top:20px;width:69px;height:69px}.hero-caption{left:22px;bottom:20px}.booking-shell{width:calc(100% - 22px);padding:21px 16px}.booking-form{grid-template-columns:1fr 1fr}.booking-form label:nth-child(4),.booking-form label:nth-child(5),.booking-submit{grid-column:1/-1}.home-experience{grid-template-columns:1fr;margin:48px auto;gap:12px}.experience-intro{grid-column:auto;padding:0 5px 10px}.experience-card{min-height:220px}.home-footer{flex-wrap:wrap}.home-footer>span{order:3;width:100%}.service-switcher{top:104px;gap:7px;padding:9px 8px}.service-switcher a{flex:1;padding:10px 6px;font-size:10px}.menu-section{scroll-margin-top:176px}.home-entry-link{margin-left:auto}.app-header{gap:8px}}
+
+/* Kitchen display styled for a restaurant pass: clear hierarchy, two dedicated stations and a glanceable live clock. */
+.staff-login-card .password-field { position: relative; display: flex; align-items: center; }
+.staff-login-card .password-field input { width: 100%; padding-right: 48px; }
+.staff-login-card form .password-toggle { position: absolute; right: 5px; top: 50%; display: grid; place-items: center; width: 38px; height: 38px; padding: 8px; transform: translateY(-50%); border: 0; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; }
+.staff-login-card .password-toggle:hover { background: #f1f5f9; color: #334155; }
+.staff-login-card .password-toggle svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.staff-login-card .password-toggle:focus-visible { outline: 2px solid #b45309; outline-offset: 2px; }
 
 /* Kitchen display styled for a restaurant pass: clear hierarchy, two dedicated stations and a glanceable live clock. */
 .professional-kitchen .kds-header { position: sticky; top: 0; z-index: 5; min-height: 86px; padding: 13px clamp(20px, 3vw, 44px); }
@@ -846,3 +951,5 @@ body:not(.professional-kitchen):not(.professional-admin) { background: linear-gr
 .professional-kitchen .ticket-card.pending { border-left: 3px solid #f59e0b; }.professional-kitchen .ticket-card.cooking { border-left: 3px solid #3b82f6; }.professional-kitchen .ticket-card.ready { border-left: 3px solid #22c55e; }
 .professional-kitchen .station-empty { min-height: 300px; border: 1px dashed #d8e0e9; border-radius: 11px; background: #fbfcfe; }
 @media (max-width: 760px) { .kds-header-right { width: 100%; justify-content: space-between; }.kds-page-title { align-items: flex-start; flex-direction: column; }.professional-kitchen .station-panel { min-height: 300px; }.professional-kitchen .station-empty { min-height: 180px; } }
+
+.qr-highlight { outline: 4px solid #f59e0b; box-shadow: 0 0 0 8px #fef3c7, 0 14px 32px #92400e33; transition: box-shadow .2s, outline .2s; }

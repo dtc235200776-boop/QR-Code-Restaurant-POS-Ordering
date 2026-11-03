@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thu ngân · Grand Cloud Hotel</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="runtime.js?v=20261103g"></script>
+</head>
+<body class="admin-body professional-admin">
+  <header class="admin-header">
+    <div class="admin-brand">
+      <div class="kds-mark">GH</div>
+      <div>
+        <p class="eyebrow">GRAND HOTEL · CASHIER · CHECK-OUT</p>
+        <h1>Quầy thu ngân · Quyết toán phòng</h1>
+        <span id="cashierConnection" class="connection-state">Đang kết nối hệ thống khách sạn…</span>
+      </div>
+    </div>
+    <nav class="staff-nav">
+      <a href="bo-phan.html">Các bộ phận</a>
+      <button id="cashierLogout" class="staff-logout">Đăng xuất</button>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-stats cashier-stats">
+      <article>
+        <span>Doanh thu dịch vụ hôm nay</span>
+        <strong id="revenueStat">0đ</strong>
+        <small id="revenueOrderCount">0 lượt yêu cầu</small>
+      </article>
+      <article>
+        <span>Phòng chờ quyết toán Check-out</span>
+        <strong id="unpaidStat">0</strong>
+        <small>Dịch vụ đã hoàn tất phục vụ</small>
+      </article>
+      <article>
+        <span>Phòng có hóa đơn dịch vụ</span>
+        <strong id="occupiedStat">0 / 12</strong>
+        <small>Đơn dịch vụ chưa quyết toán</small>
+      </article>
+    </section>
+
+<section class="admin-section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">THU NGÂN · KẾT NỐI VỚI TIẾP TÂN</p>
+          <h2>Quyết toán hóa đơn dịch vụ</h2>
+          <p>Nhận các dịch vụ đã hoàn tất theo phòng, áp dụng mã ưu đãi và ghi nhận doanh thu cho báo cáo quản lý.</p>
+        </div>
+        <div class="bill-tabs">
+          <button class="active" data-bill-view="unpaid">Chờ quyết toán</button>
+          <button data-bill-view="paid">Đã quyết toán</button>
+        </div>
+      </div>
+      <div id="billsList" class="bills-list"></div>
+    </section>
+
+</main>
+
+  <section id="receiptPrint" class="receipt-print"></section>
+  <script src="admin.js"></script>
+</body>
+</html>
+

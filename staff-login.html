@@ -5,21 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Đăng nhập nhân viên · Grand Cloud Hotel</title>
   <link rel="stylesheet" href="style.css">
+  <script src="runtime.js?v=20261103g"></script>
 </head>
 <body class="staff-login-body">
   <main class="staff-login-card">
     <div class="staff-login-icon">🛎️</div>
     <p class="eyebrow">KHU VỰC NỘI BỘ KHÁCH SẠN</p>
     <h1>Đăng nhập nhân viên</h1>
-    <p>Trang điều phối Buồng phòng và Lễ tân chỉ dành cho nhân viên khách sạn.</p>
+    <p>Chọn đúng bộ phận để mở màn hình công việc. Quản lý có quyền truy cập toàn hệ thống.</p>
     <form id="staffLogin">
-      <label for="staffPin">Mã nhân viên khách sạn</label>
-      <input id="staffPin" type="password" inputmode="numeric" autocomplete="current-password" required autofocus>
+      <label for="staffRole">Bộ phận</label>
+      <select id="staffRole" required><option value="receptionist">Tiếp tân</option><option value="cashier">Thu ngân</option><option value="housekeeping">Buồng phòng · Vận hành chung</option><option value="kitchen">Bếp &amp; phục vụ · Vận hành chung</option><option value="manager">Quản lý</option></select>
+      <label for="staffUsername">Tài khoản</label>
+      <input id="staffUsername" autocomplete="username" required autofocus>
+      <label for="staffPassword">Mật khẩu</label>
+      <div class="password-field">
+        <input id="staffPassword" type="password" autocomplete="current-password" required>
+        <button id="togglePassword" class="password-toggle" type="button" aria-label="Hiện mật khẩu" aria-pressed="false" title="Hiện mật khẩu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
       <button type="submit">Đăng nhập</button>
       <div id="loginError" role="alert"></div>
     </form>
-    <p class="login-demo-hint">Mã PIN mặc định: <b>246810</b></p>
-    <a href="index.html">← Trở về trang dịch vụ phòng</a>
+    <p class="login-demo-hint">Dùng tài khoản do quản lý khách sạn cấp. Bếp và buồng phòng dùng cùng trang vận hành, mỗi tài khoản chỉ mở mục công việc của bộ phận mình.</p>
+    <a href="bo-phan.html">← Trở về cổng nhân viên</a>
   </main>
   <script src="staff-login.js"></script>
 </body>

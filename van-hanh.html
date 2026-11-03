@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Điều phối dịch vụ · Grand Cloud Hotel</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="runtime.js?v=20261103g"></script>
+</head>
+<body class="kitchen-body professional-kitchen" data-station="shared">
+  <header class="kds-header">
+    <div class="kds-brand"><div class="kds-mark">GH</div><div>
+      <p class="eyebrow">GRAND HOTEL · SERVICE OPERATIONS</p>
+      <h1>Điều phối dịch vụ khách sạn</h1>
+      <span id="connectionState" class="connection-state">Đang kết nối hệ thống khách sạn…</span>
+    </div></div>
+    <div class="kds-header-right"><div class="kds-clock-block"><span class="kds-live-dot"></span><span id="shiftLabel">CA TRỰC</span><strong id="kdsClock">--:--</strong></div>
+      <nav class="staff-nav"><a href="bo-phan.html">Chuyển bộ phận</a><a href="manager.html" data-manager-link hidden>Quản lý toàn khách sạn →</a><button id="logoutButton" class="staff-logout">Đăng xuất</button></nav>
+    </div>
+  </header>
+  <main class="kds-main">
+    <div class="kds-page-title"><div><p class="eyebrow">TRUNG TÂM VẬN HÀNH</p><h2>Đơn dịch vụ &amp; luân chuyển phòng</h2><p>Bếp và buồng phòng cùng theo dõi yêu cầu QR; mỗi tài khoản chỉ thao tác đúng bộ phận được cấp.</p></div><span class="kds-live-label"><i></i> Đồng bộ trực tiếp</span></div>
+    <nav class="ops-tabs" aria-label="Mục công việc">
+      <button type="button" data-ops-tab="kitchen">🍽️ Bếp &amp; Ẩm thực <b id="diningTabCount">0</b></button>
+      <button type="button" data-ops-tab="housekeeping">🧹 Buồng phòng <b id="housekeepingTabCount">0</b></button>
+    </nav>
+    <section class="kds-stats">
+      <article class="kds-stat-pending"><span><i>◷</i> Chờ nhận việc</span><strong id="pendingTotal">0</strong><small>Yêu cầu mới từ khách lưu trú</small></article>
+      <article class="kds-stat-cooking"><span><i>♨</i> Đang thực hiện</span><strong id="cookingTotal">0</strong><small>Đang được bộ phận xử lý</small></article>
+      <article class="kds-stat-ready"><span><i>✓</i> Đã hoàn tất</span><strong id="readyTotal">0</strong><small>Đã phục vụ tới phòng khách</small></article>
+    </section>
+    <section class="station-panel drink-station" data-station-panel="kitchen" id="kitchenSection">
+      <header class="station-heading"><div class="station-icon">🍽️</div><div><p class="eyebrow">IN-ROOM DINING</p><h2>Hàng đợi Bếp</h2><span>Điểm tâm · món chính · đồ uống · minibar</span></div><b id="drinkTicketCount" class="station-count">0 yêu cầu</b></header>
+      <div id="drinkTickets" class="ticket-list"></div>
+    </section>
+    <section class="station-panel food-station" data-station-panel="housekeeping" id="housekeepingSection">
+      <header class="station-heading"><div class="station-icon">🧹</div><div><p class="eyebrow">YÊU CẦU TỪ KHÁCH</p><h2>Dịch vụ &amp; Tiện ích phòng</h2><span>Dọn dẹp · khăn &amp; vật dụng · giặt ủi · đưa đón</span></div><b id="foodTicketCount" class="station-count">0 yêu cầu</b></header>
+      <div id="foodTickets" class="ticket-list"></div>
+    </section>
+    <section class="station-panel turnover-panel" data-room-turnover>
+      <header class="station-heading"><div class="station-icon">🧽</div><div><p class="eyebrow">LUÂN CHUYỂN PHÒNG</p><h2>Phòng cần dọn sau check-out</h2><span>Xác nhận phòng sạch để lễ tân nhận khách tiếp</span></div><b id="turnoverCount" class="station-count">0 phòng</b></header>
+      <div id="turnoverRooms" class="turnover-rooms"></div>
+    </section>
+  </main>
+  <script src="kitchen.js?v=20261103g"></script>
+</body>
+</html>

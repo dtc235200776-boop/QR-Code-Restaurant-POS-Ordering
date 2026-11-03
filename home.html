@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#493321">
+  <title>Grand Cloud Hotel &amp; Resort · Nghỉ dưỡng giữa lòng thành phố</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="runtime.js?v=20261103g"></script>
+</head>
+<body class="hotel-home">
+  <div class="home-topline"><span>✦ Trải nghiệm nghỉ dưỡng chỉn chu</span></div>
+  <header class="home-header">
+    <a class="home-brand" href="/" aria-label="Grand Cloud Hotel - Trang chủ"><span>G</span><span><b>GRAND CLOUD</b><small>HOTEL &amp; RESORT</small></span></a>
+    <nav aria-label="Điều hướng chính">
+      <a class="current" href="/">Trang chủ</a>
+      <a href="#experience">Trải nghiệm</a>
+      <a href="khach-hang.html#foodSection">Buồng phòng</a>
+      <a href="khach-hang.html#drinkSection">Ẩm thực</a>
+      <a href="#booking">Đặt phòng</a>
+    </nav>
+    <a class="home-book-link" href="#booking">Kiểm tra phòng <span>↗</span></a>
+  </header>
+
+  <main>
+    <section class="home-hero">
+      <img class="hero-suite-art" src="assets/hotel-suite.svg" alt="Minh họa phòng nghỉ ấm cúng tại Grand Cloud Hotel">
+      <div class="hero-shade"></div>
+      <div class="hero-copy">
+        <span class="hero-kicker"><i></i> GRAND CLOUD HOTEL &amp; RESORT</span>
+        <h1>Một chốn nghỉ<br>để <em>thảnh thơi.</em></h1>
+        <p>Không gian nghỉ dưỡng ấm áp, dịch vụ tận tâm và tiện ích phòng thông minh luôn sẵn sàng cho kỳ lưu trú của bạn.</p>
+        <div class="hero-actions"><a class="button-wood" href="#booking">Tìm kỳ nghỉ của bạn <span>→</span></a><a class="hero-text-link" href="khach-hang.html">Khám phá dịch vụ phòng <span>↗</span></a></div>
+      </div>
+      <div class="hero-caption"><span>01 / 03</span><i></i><span>Không gian nghỉ ngơi tinh tế</span></div>
+      <div class="hero-seal"><span>GC</span><small>STAY<br>WELL</small></div>
+    </section>
+
+    <section class="booking-shell" id="booking">
+      <div class="booking-heading"><span class="eyebrow-wood">LÊN KẾ HOẠCH LƯU TRÚ</span><h2>Tìm kỳ nghỉ phù hợp</h2></div>
+      <form id="bookingForm" class="booking-form">
+        <label><span>Ngày nhận phòng</span><input id="checkIn" name="checkIn" type="date" required></label>
+        <label><span>Ngày trả phòng</span><input id="checkOut" name="checkOut" type="date" required></label>
+        <label><span>Số khách</span><select id="guests" name="guests"><option value="1">1 khách</option><option value="2" selected>2 khách</option><option value="3">3 khách</option><option value="4">4 khách</option></select></label>
+        <label><span>Họ và tên</span><input name="guestName" maxlength="80" placeholder="Tên người đặt phòng" required></label>
+        <label><span>Số điện thoại</span><input name="phone" type="tel" maxlength="30" placeholder="Số liên hệ" required></label>
+        <button class="button-wood booking-submit" type="submit">Gửi yêu cầu <span>→</span></button>
+      </form>
+      <p class="booking-note">Yêu cầu được gửi tới tiếp tân để xác nhận. Gửi yêu cầu chưa đồng nghĩa với đặt phòng đã được xác nhận.</p>
+      <div id="bookingResult" class="booking-result" role="status" aria-live="polite" hidden></div>
+    </section>
+
+    <section class="home-experience" id="experience">
+      <div class="experience-intro"><span class="eyebrow-wood">DỊCH VỤ CHU ĐÁO · QR THÔNG MINH</span><h2>Ở thoải mái.<br>Chăm sóc <em>đúng lúc.</em></h2><p>Quét mã QR tại phòng để gọi buồng phòng, đặt món ăn và theo dõi yêu cầu ngay trên điện thoại.</p><a class="text-link-wood" href="khach-hang.html">Xem toàn bộ dịch vụ <span>→</span></a></div>
+      <a class="experience-card stay-card" href="khach-hang.html#foodSection"><span class="experience-icon">♨</span><span class="card-number">01</span><h3>Buồng phòng<br>&amp; tiện ích</h3><p>Dọn phòng, khăn tắm, giặt ủi và những hỗ trợ cần thiết.</p><span class="card-arrow">↗</span></a>
+      <a class="experience-card dining-card" href="khach-hang.html#drinkSection"><span class="experience-icon">♨</span><span class="card-number">02</span><h3>Ẩm thực<br>tại phòng</h3><p>Thưởng thức bữa sáng, món ngon và thức uống ngay tại phòng.</p><span class="card-arrow">↗</span></a>
+    </section>
+  </main>
+  <footer class="home-footer"><a class="home-brand" href="/"><span>G</span><span><b>GRAND CLOUD</b><small>HOTEL &amp; RESORT</small></span></a><span>Chào mừng bạn đến với kỳ nghỉ thư thái.</span><a href="khach-hang.html">Dịch vụ QR phòng ↗</a></footer>
+  <script src="home.js"></script>
+</body>
+</html>

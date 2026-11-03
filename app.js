@@ -26,9 +26,18 @@ let MENU_ITEMS = [
 
 let cart = {};
 let currentTable = null; // Số phòng (ví dụ: Phòng 101)
-const API_BASE = location.port === '3000' ? '' : `${location.protocol}//${location.hostname}:3000`;
+const API_BASE = '';
 const apiUrl = path => `${API_BASE}${path}`;
 const money = value => Number(value || 0) === 0 ? 'Miễn phí' : `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+const itemIcons = { 1: '🧹', 2: '🧺', 3: '♨️', 4: '💨', 5: '🧺', 6: '👗', 7: '🛵', 8: '🚘', 9: '🍳', 10: '🍜', 11: '🥩', 12: '🍝', 13: '🥪', 14: '🍉', 15: '☕', 16: '🍵', 17: '🍷', 18: '🥤', 19: '🍺', 20: '💧' };
+const menuIllustrations = {
+  3: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><path d="M19 59h51c8 0 13 5 13 12v5H20c-8 0-12-4-12-9s4-8 11-8Z" fill="#8b603d"/><path d="M22 56c1-18 14-31 33-31h20v16H57c-9 0-14 5-16 15l-2 8H22Z" fill="#e7c18d" stroke="#765034" stroke-width="4" stroke-linejoin="round"/><path d="M59 25v-9h17v9M27 76v6m48-6v6" stroke="#765034" stroke-width="4" stroke-linecap="round"/><path d="M30 49c4-7 9-11 16-13" stroke="#fff2dc" stroke-width="4" stroke-linecap="round"/></svg>',
+  4: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><path d="m22 39 24-14 25 14-7 18-23 4-19-12Z" fill="#7c9da0" stroke="#49666a" stroke-width="4" stroke-linejoin="round"/><path d="m60 40 20 5 2 12-20 1Z" fill="#d2a46f" stroke="#765034" stroke-width="4" stroke-linejoin="round"/><path d="m35 57-10 20h18l12-20m-47-5-8-2m8 12-7 2m7-24-6-4" stroke="#765034" stroke-width="4" stroke-linecap="round"/><circle cx="33" cy="39" r="4" fill="#fff2dc"/></svg>',
+  10: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><path d="M33 24c-7-7 4-10 0-17m18 17c-7-7 4-10 0-17m18 17c-7-7 4-10 0-17" stroke="#a9784b" stroke-width="4" stroke-linecap="round"/><path d="M17 49h66l-8 28c-2 8-9 13-17 13H42c-8 0-15-5-17-13Z" fill="#bd7852" stroke="#70462f" stroke-width="4"/><ellipse cx="50" cy="49" rx="33" ry="12" fill="#f1d7a7" stroke="#70462f" stroke-width="4"/><path d="M32 47c10 7 25 7 37 0M29 54c13 7 28 7 42 0m-42-9 35-8m-25 9 32-8" stroke="#8a5b35" stroke-width="3" stroke-linecap="round"/><path d="m28 83-8 8m52-8 8 8" stroke="#70462f" stroke-width="4" stroke-linecap="round"/></svg>',
+  11: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="51" cy="55" rx="39" ry="27" fill="#fff9ef" stroke="#9a704b" stroke-width="4"/><path d="M28 58c0-15 11-25 25-25 12 0 22 9 22 22 0 10-8 17-20 18-15 1-27-4-27-15Z" fill="#a84f36" stroke="#713b2e" stroke-width="4"/><path d="M43 37c4-4 11-4 15 0l-3 7c-4 3-9 3-13 0Z" fill="#f1d0a4"/><path d="m37 49 4 4m8-8 4 5m5 5 5 4" stroke="#f0bd77" stroke-width="3" stroke-linecap="round"/><circle cx="69" cy="43" r="5" fill="#748b4c"/><path d="M68 38c1-5 6-7 10-5-1 5-5 8-10 5Z" fill="#68834d"/><path d="M18 82h66" stroke="#d5bd9e" stroke-width="4" stroke-linecap="round"/></svg>',
+  12: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="55" rx="39" ry="27" fill="#fff9ef" stroke="#9a704b" stroke-width="4"/><ellipse cx="50" cy="53" rx="28" ry="17" fill="#d46a42"/><path d="M31 51c2-12 15-13 17-2 2 10 12 10 13 0s14-11 16 0M35 59c5-8 12-8 16 0s12 8 17 0" stroke="#efc86f" stroke-width="4" stroke-linecap="round"/><circle cx="47" cy="48" r="3" fill="#6b813f"/><circle cx="66" cy="57" r="3" fill="#6b813f"/><path d="m35 21 29 26M42 18l29 26" stroke="#765034" stroke-width="3" stroke-linecap="round"/><path d="M15 80h70" stroke="#d5bd9e" stroke-width="4" stroke-linecap="round"/></svg>'
+};
+const menuIcon = item => menuIllustrations[item.id] || itemIcons[item.id] || item.icon || '✨';
 
 async function getOrders() {
   try {
@@ -49,7 +58,7 @@ function renderMenu() {
   const card = item => `
     <article class="food-card ${item.available === false ? 'sold-out' : ''}">
       <div class="food-img-wrap">
-        <span>${item.icon}</span>
+        <span aria-hidden="true">${menuIcon(item)}</span>
         ${item.salePercent ? `<span class="sale-badge">-${item.salePercent}%</span>` : ''}
         ${item.price === 0 ? '<span class="sale-badge" style="background:#15803d">Free</span>' : ''}
         ${item.available === false ? '<span class="sold-out-badge">Tạm hết</span>' : ''}
@@ -172,29 +181,14 @@ async function submitOrder() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ table: currentTable, items: entries.map(({ item, qty, note }) => ({ id: item.id, qty, note: note.trim() })) })
     });
+    const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const result = await response.json().catch(() => ({}));
       throw new Error(result.error || 'Lỗi gửi API server');
     }
   } catch (error) {
-    console.info('Gửi yêu cầu qua chế độ lưu cục bộ:', error.message);
-    const local = JSON.parse(localStorage.getItem('cloud_hotel_orders') || '[]');
-    const newOrder = {
-      id: `SRV-${Date.now().toString().slice(-6)}`,
-      table: currentTable,
-      items: entries.map(({ item, qty, note }) => ({
-        id: item.id,
-        name: item.name,
-        qty,
-        note: note.trim(),
-        total: Math.round(item.price * (100 - (item.salePercent || 0)) / 100) * qty
-      })),
-      totalPrice: entries.reduce((sum, e) => sum + Math.round(e.item.price * (100 - (e.item.salePercent || 0)) / 100) * e.qty, 0),
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    };
-    local.unshift(newOrder);
-    localStorage.setItem('cloud_hotel_orders', JSON.stringify(local));
+    alert(`${error.message}\n\nHãy kiểm tra kết nối hoặc liên hệ tiếp tân. Giỏ dịch vụ vẫn được giữ để quý khách thử lại.`);
+    submitButton.disabled = false;
+    return;
   }
   submitButton.disabled = false;
   cart = {};
@@ -226,6 +220,20 @@ async function init() {
   const digits = rawRoom ? rawRoom.replace(/\D/g, '') : '';
   const roomNum = Number(digits);
   currentTable = digits ? `Phòng ${roomNum}` : null;
+
+  const selectedView = location.hash === '#foodSection' ? 'housekeeping' : location.hash === '#drinkSection' ? 'dining' : '';
+  document.body.dataset.serviceView = selectedView;
+  const serviceLinks = [...document.querySelectorAll('[data-service-link]')];
+  const setServiceView = view => {
+    document.body.dataset.serviceView = view;
+    serviceLinks.forEach(link => link.classList.toggle('active', link.dataset.serviceLink === view));
+  };
+  serviceLinks.forEach(link => link.addEventListener('click', () => setServiceView(link.dataset.serviceLink)));
+  window.addEventListener('hashchange', () => {
+    const view = location.hash === '#foodSection' ? 'housekeeping' : location.hash === '#drinkSection' ? 'dining' : '';
+    setServiceView(view);
+  });
+  if (selectedView) setServiceView(selectedView);
   
   ['tableLabel', 'currentTableText', 'modalTableNumber', 'successTableText'].forEach(id => {
     const element = document.getElementById(id);

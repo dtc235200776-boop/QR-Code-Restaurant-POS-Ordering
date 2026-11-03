@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lễ tân · Tiếp nhận khách &amp; QR phòng · Grand Cloud Hotel</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --warning-bg: #fffbeb;
+      --warning-border: #f59e0b;
+      --warning-text: #b45309;
+      --danger-bg: #fef2f2;
+      --danger-border: #ef4444;
+      --danger-text: #b91c1c;
+      --success-bg: #f0fdf4;
+      --success-border: #22c55e;
+      --success-text: #15803d;
+      --card-border: #0f172a;
+    }
+    * { box-sizing: border-box; }
+    .reservation-panel { margin: 0 0 22px; padding: 22px; border: 1px solid #e7d8c6; border-radius: 18px; background: #fff; box-shadow: 0 8px 24px #5437190c; }
+    .reservation-panel h2 { margin: 0 0 5px; color: #563d29; font-size: 21px; }
+    .reservation-panel > p { margin: 0 0 16px; color: #8a7763; font-size: 13px; }
+    .reservation-list { display: grid; gap: 10px; }
+    .reservation-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px; border: 1px solid #eee4d7; border-radius: 12px; background: #fffcf7; }
+    .reservation-row > div:first-child { display: grid; gap: 4px; }
+    .reservation-row small { color: #887660; }
+    .reservation-actions { display: flex; gap: 8px; }
+    .reservation-actions button { border: 0; border-radius: 9px; padding: 9px 12px; background: #7b5134; color: #fff; font-weight: 700; cursor: pointer; }
+    .reservation-actions button[data-status="rejected"] { background: #f5eae2; color: #84442d; }
+    .room-status-panel { margin: 0 0 22px; padding: 22px; border: 1px solid #e7d8c6; border-radius: 18px; background: #fff; box-shadow: 0 8px 24px #5437190c; }
+    .room-status-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .room-status-heading h2 { margin:0; color:#563d29; font-size:21px; }.room-status-heading p { margin:5px 0 0; color:#8a7763; font-size:12px; }
+    .room-status-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    .room-status-card { min-height:150px; padding:14px; border:1px solid #e8ddcf; border-top:4px solid #51976a; border-radius:12px; background:#fffdf9; }
+    .room-status-card.occupied { border-top-color:#b78340; }.room-status-card.cleaning { border-top-color:#4b83a5; }.room-status-card.maintenance { border-top-color:#ba6250; }
+    .room-status-card h3 { display:flex; justify-content:space-between; gap:6px; margin:0 0 8px; color:#4c3828; font-size:15px; }
+    .room-status-card .room-state { color:#738268; font-size:10px; font-weight:800; }.room-status-card.occupied .room-state {color:#a16825}.room-status-card.cleaning .room-state{color:#316b8c}.room-status-card.maintenance .room-state{color:#a5483b}
+    .room-status-card p { min-height:30px; margin:5px 0 10px; color:#887660; font-size:10px; line-height:1.5; }
+    .room-status-actions { display:flex; gap:6px; }.room-status-actions button { flex:1; padding:8px 6px; border:1px solid #decdb6; border-radius:7px; background:#f7efe4; color:#65462c; font-size:10px; font-weight:800; cursor:pointer; }
+    .room-status-actions button.primary { border-color:#765034; background:#765034; color:white; }
+    .room-status-actions button:disabled { background:#e2e8f0; border-color:#cbd5e1; color:#64748b; cursor:not-allowed; }
+    .reception-bills { margin:0 0 22px; padding:22px; border:1px solid #e7d8c6; border-radius:18px; background:#fff; box-shadow:0 8px 24px #5437190c; }
+    .reception-bills h2 { margin:0 0 5px; color:#563d29; font-size:21px; }
+    .reception-bills > p { margin:0 0 16px; color:#8a7763; font-size:13px; }
+    .reception-bill-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:12px; }
+    .reception-bill { border:1px solid #e8ddcf; border-radius:12px; padding:14px; background:#fffdf9; }
+    .reception-bill header,.reception-bill footer { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .reception-bill header strong { color:#4c3828; }.reception-bill small { display:block; margin-top:4px; color:#887660; }
+    .reception-bill ul { padding:0; margin:10px 0; list-style:none; color:#65462c; font-size:13px; }
+    .reception-bill footer { border-top:1px solid #e8ddcf; padding-top:10px; font-weight:800; }
+    .reception-bill button { border:0; border-radius:8px; padding:9px 12px; background:#765034; color:white; font-weight:800; cursor:pointer; }
+    .reception-bill button:disabled { background:#94a3b8; cursor:not-allowed; }
+    .paid-tag { color:#15803d; font-size:12px; }
+    .guest-qr-backdrop { position:fixed; inset:0; z-index:10000; display:grid; place-items:center; padding:18px; background:#172235b8; }
+    .guest-qr-backdrop[hidden] { display:none !important; }
+    .guest-qr-dialog { width:min(420px,100%); padding:22px; border-radius:18px; background:#fff; text-align:center; box-shadow:0 24px 80px #0005; }
+    .guest-qr-dialog h2 { margin:0 0 6px; color:#4c3828; }.guest-qr-dialog p { margin:0 0 14px; color:#64748b; font-size:13px; }
+    .guest-qr-dialog img { width:min(260px,75vw); height:auto; aspect-ratio:1; border:1px solid #e2e8f0; border-radius:12px; background:#fff; }
+    .guest-qr-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:9px; margin-top:15px; }
+    .guest-qr-actions button,.guest-qr-actions a { display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border:0; border-radius:9px; background:#765034; color:#fff; font-weight:800; text-decoration:none; cursor:pointer; }
+    .guest-qr-actions a { background:#f4eadc; color:#65462c; }
+    .checkin-backdrop { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:16px; background:#21180fcc; }
+    .checkin-backdrop[hidden] { display:none; }.checkin-card { width:min(430px,100%); padding:22px; border-radius:16px; background:#fffdf9; box-shadow:0 25px 80px #0005; }
+    .checkin-card h2 { margin:0 0 5px; color:#563d29; }.checkin-card p { margin:0 0 15px; color:#8a7763; font-size:12px; }
+    .checkin-card form { display:grid; gap:10px; }.checkin-card label { display:grid; gap:5px; color:#70553a; font-size:11px; font-weight:700; }.checkin-card input { height:40px; padding:0 10px; border:1px solid #dfd0bd; border-radius:7px; background:white; }
+    .checkin-actions { display:flex; gap:8px; margin-top:6px; }.checkin-actions button { flex:1; padding:11px; border:1px solid #d8c7b1; border-radius:8px; background:#f7f0e6; color:#64482f; font-weight:800; cursor:pointer; }.checkin-actions button[type="submit"] { background:#765034; color:white; }
+    @media(max-width:650px){.reservation-row{align-items:flex-start;flex-direction:column}.reservation-actions{width:100%}.reservation-actions button{flex:1}}
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      margin: 0;
+      padding: 24px 16px;
+    }
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+    .print-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .employee-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; }
+    .employee-actions a { text-decoration:none; }
+    .employee-actions .logout-action { background:#62452e; }
+    .print-header h1 {
+      margin: 0 0 8px 0;
+      font-size: 26px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .print-header p {
+      margin: 0 0 16px 0;
+      color: #64748b;
+      font-size: 15px;
+    }
+    .btn-action {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-action:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    .config-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      padding: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .config-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert-banner {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .alert-banner.warning {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: var(--warning-text);
+    }
+    .alert-banner.danger {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger-text);
+    }
+    .alert-banner.success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+    }
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .input-row input {
+      flex: 1;
+      min-width: 280px;
+      padding: 10px 14px;
+      font-size: 15px;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input-row input:focus {
+      border-color: var(--primary);
+    }
+    .quick-ips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+    .quick-ip-chip {
+      background: #e2e8f0;
+      color: #1e293b;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.15s;
+    }
+    .quick-ip-chip:hover {
+      background: #cbd5e1;
+      transform: scale(1.03);
+    }
+    .quick-ip-chip.active-ip {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+    }
+    .port-selector {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #475569;
+    }
+    .guide-box {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+    }
+    .guide-box ol {
+      margin: 4px 0 0 18px;
+      padding: 0;
+    }
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 20px;
+    }
+    .table-qr-card {
+      background: white;
+      border: 2px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      page-break-inside: avoid;
+    }
+    .table-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #b45309;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+    }
+    .table-subtitle {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .qr-img {
+      width: 170px;
+      height: 170px;
+      margin: 12px auto;
+      display: block;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+    }
+    .instruction {
+      font-size: 12px;
+      color: #475569;
+      margin: 6px 0;
+      font-weight: 500;
+    }
+    .qr-dest-url {
+      font-size: 10px;
+      color: #94a3b8;
+      word-break: break-all;
+      margin-top: 4px;
+      padding: 4px;
+      background: #f8fafc;
+      border-radius: 4px;
+    }
+    .qr-demo-link {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      color: #fff;
+      background: #b45309;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .qr-demo-link:hover {
+      background: #92400e;
+    }
+    @media print {
+      .print-header .btn-action,
+      .employee-actions,
+      .config-card {
+        display: none !important;
+      }
+      body {
+        background: white;
+        padding: 0;
+      }
+      .tables-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+      .table-qr-card {
+        border-color: #000;
+        box-shadow: none;
+      }
+    }
+  </style>
+  <script src="runtime.js?v=20261103g"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="print-header">
+      <h1>Lễ tân · Phòng &amp; Mã QR dịch vụ</h1>
+      <p>Kiểm tra phòng trống, làm thủ tục nhận/trả khách, xử lý yêu cầu đặt phòng và in mã QR gắn với từng phòng.</p>
+      <div class="employee-actions"><a class="btn-action" href="bo-phan.html">Chuyển bộ phận</a><button id="frontdeskLogout" class="btn-action logout-action" type="button">Đăng xuất</button><button class="btn-action" onclick="window.print()">🖨️ In ra giấy A4</button></div>
+    </div>
+
+    <section class="room-status-panel">
+      <div class="room-status-heading"><div><h2>Tình trạng phòng &amp; thủ tục khách</h2><p>Tiếp tân nhận phòng, xác nhận thu tiền dịch vụ và hoàn tất trả phòng.</p></div></div>
+      <div id="roomStatusGrid" class="room-status-grid">Đang tải sơ đồ phòng…</div>
+    </section>
+
+    <section class="reception-bills">
+      <h2>Thanh toán dịch vụ &amp; trả phòng</h2>
+      <p>Lễ tân xác nhận đã thu tiền tại quầy. Chỉ trả phòng sau khi các bộ phận hoàn tất dịch vụ và hóa đơn được thanh toán.</p>
+      <div id="receptionBillsList" class="reception-bill-list">Đang tải hóa đơn dịch vụ…</div>
+    </section>
+
+    <section class="reservation-panel">
+      <h2>Yêu cầu đặt phòng trực tuyến</h2>
+      <p>Tiếp nhận và xác nhận yêu cầu khách gửi từ trang chủ.</p>
+      <div class="reservation-list" id="reservationList">Đang tải yêu cầu đặt phòng…</div>
+    </section>
+
+    <!-- Hộp cấu hình địa chỉ IP máy chủ -->
+    <div class="config-card">
+      <div class="config-title">🌐 Cấu hình địa chỉ máy chủ cho điện thoại khách quét:</div>
+      
+      <!-- Cảnh báo nếu dùng localhost / 127.0.0.1 -->
+      <div id="ipAlertBox" class="alert-banner warning" style="display: none;"></div>
+
+      <div class="input-row">
+        <input type="text" id="baseUrl" value="" placeholder="Ví dụ: https://ten-du-an.onrender.com/khach-hang.html">
+        <button class="btn-action" onclick="applyCustomUrl()">✓ Cập nhật mã QR</button>
+      </div>
+
+      <div class="quick-ips">
+        <span><b>Gợi ý IP LAN máy tính:</b></span>
+        <button class="quick-ip-chip" id="btnLanIp" onclick="selectIp(DEFAULT_LAN_IP)">📌 Dùng địa chỉ máy chủ hiện tại</button>
+        <span id="detectedIps"></span>
+      </div>
+
+      <div class="port-selector">
+        <span><b>Đổi cổng nhanh:</b></span>
+        <button class="quick-ip-chip" onclick="switchPort(location.port || '80')">Cổng ứng dụng hiện tại</button>
+      </div>
+
+      <div class="guide-box">
+        <b>💡 Hướng dẫn vận hành:</b>
+        <ol>
+          <li>Khi deploy lên Cloud (như Render), bạn dán đường link HTTPS (ví dụ <code>https://ten-app.onrender.com/khach-hang.html</code>) vào ô trên rồi bấm Cập nhật mã QR.</li>
+          <li>In ra giấy và đặt tại bàn làm việc hoặc tủ đầu giường từng phòng khách sạn.</li>
+          <li>Bất kỳ khách lưu trú nào dùng điện thoại quét mã là hệ thống tự động nhận diện đúng số phòng!</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Lưới 12 phòng (Phòng 101 -> Phòng 112) -->
+    <div class="tables-grid" id="tablesContainer"></div>
+  </div>
+  <div id="checkinBackdrop" class="checkin-backdrop" hidden>
+    <section class="checkin-card" role="dialog" aria-modal="true" aria-labelledby="checkinTitle">
+      <h2 id="checkinTitle">Làm thủ tục nhận phòng</h2><p id="checkinRoomLabel"></p>
+      <form id="checkinForm">
+        <input type="hidden" name="roomNumber">
+        <label>Họ tên khách<input name="guestName" maxlength="80" required></label>
+        <label>Số điện thoại<input name="guestPhone" type="tel" maxlength="30" required></label>
+        <label>Ngày trả phòng dự kiến<input name="plannedCheckout" type="date" required></label>
+        <div class="checkin-actions"><button type="button" id="cancelCheckin">Hủy</button><button type="submit">Xác nhận nhận phòng</button></div>
+      </form>
+    </section>
+  </div>
+  <div id="guestQrBackdrop" class="guest-qr-backdrop" hidden>
+    <section class="guest-qr-dialog" role="dialog" aria-modal="true" aria-labelledby="guestQrTitle">
+      <h2 id="guestQrTitle">Mã QR dịch vụ phòng</h2><p>Đưa mã này cho khách quét để gọi dịch vụ tại phòng.</p>
+      <img id="guestQrImage" alt="Mã QR dịch vụ phòng">
+      <div class="guest-qr-actions"><a id="guestQrOpenLink" href="#" target="_blank" rel="noopener">Mở thử trang khách</a><button id="closeGuestQr" type="button">Xong · quay lại sơ đồ phòng</button></div>
+    </section>
+  </div>
+
+  <script>
+    const DEFAULT_LAN_IP = location.hostname;
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+    const money = value => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+    let receptionOrders = [];
+
+    async function loadReceptionOrders() {
+      const target = document.getElementById('receptionBillsList');
+      try {
+        const response = await fetch('/api/orders', { credentials:'include', cache:'no-store' });
+        const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Không tải được hóa đơn.');
+        receptionOrders = data.orders;
+        const unpaid = receptionOrders.filter(order => order.status !== 'paid');
+        target.innerHTML = unpaid.length ? unpaid.map(order => {
+          const ready = ['ready','served'].includes(order.status);
+          const state = ready ? 'Dịch vụ đã hoàn tất · có thể thu tiền' : 'Đang chờ bếp / buồng phòng hoàn tất';
+          return `<article class="reception-bill"><header><div><strong>${escapeHtml(order.table)}</strong><small>#${escapeHtml(order.id)} · ${new Date(order.createdAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</small></div><b>${money(order.totalPrice)}</b></header><ul>${order.items.map(item => `<li>${item.qty} × ${escapeHtml(item.name)}</li>`).join('')}</ul><small>${state}</small><footer><span>${ready ? 'Chờ xác nhận thu' : 'Chưa thể thanh toán'}</span><button data-reception-pay="${escapeHtml(order.id)}" ${ready ? '' : 'disabled'}>Xác nhận đã thu</button></footer></article>`;
+        }).join('') : '<p>Không còn hóa đơn dịch vụ chờ thu.</p>';
+      } catch (error) { target.textContent = error.message; }
+    }
+
+    document.getElementById('receptionBillsList').addEventListener('click', async event => {
+      const button = event.target.closest('[data-reception-pay]'); if (!button) return;
+      button.disabled = true;
+      try {
+        const response = await fetch(`/api/orders/${encodeURIComponent(button.dataset.receptionPay)}/pay`, { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({voucherCode:''}) });
+        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không thể xác nhận thanh toán.');
+        await loadReceptionOrders(); await loadRooms();
+      } catch (error) { alert(error.message); button.disabled = false; }
+    });
+
+    async function loadReservations() {
+      const target = document.getElementById('reservationList');
+      try {
+        const response = await fetch('/api/reservations', { credentials: 'include', cache: 'no-store' });
+        if (!response.ok) throw new Error('Không tải được yêu cầu đặt phòng.');
+        const data = await response.json();
+        const statuses = { pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', checked_in: 'Khách đã nhận phòng', completed: 'Đã trả phòng', rejected: 'Đã từ chối', cancelled: 'Đã hủy' };
+        target.innerHTML = data.reservations.length ? data.reservations.map(row => `
+          <article class="reservation-row"><div><strong>${escapeHtml(row.guestName)} · ${escapeHtml(row.phone)}</strong>
+          <small>${escapeHtml(row.checkIn)} → ${escapeHtml(row.checkOut)} · ${row.guests} khách · ${escapeHtml(row.id)}</small>
+          <small>Trạng thái: ${statuses[row.status] || escapeHtml(row.status)}</small></div>
+          ${row.status === 'pending' ? `<div class="reservation-actions"><button data-reservation="${escapeHtml(row.id)}" data-status="confirmed">Xác nhận</button><button data-reservation="${escapeHtml(row.id)}" data-status="rejected">Từ chối</button></div>` : ''}</article>`).join('') : 'Chưa có yêu cầu đặt phòng mới.';
+      } catch (error) { target.textContent = error.message; }
+    }
+    document.getElementById('reservationList').addEventListener('click', async event => {
+      const button = event.target.closest('[data-reservation]'); if (!button) return;
+      button.disabled = true;
+      try {
+        const response = await fetch(`/api/reservations/${encodeURIComponent(button.dataset.reservation)}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: button.dataset.status }) });
+        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không thể cập nhật yêu cầu.');
+        await loadReservations();
+      } catch (error) { alert(error.message); button.disabled = false; }
+    });
+
+    const roomLabels = { available: 'Phòng trống', occupied: 'Đang lưu trú', cleaning: 'Chờ dọn phòng', maintenance: 'Đang bảo trì' };
+    const roomGrid = document.getElementById('roomStatusGrid');
+    const checkinBackdrop = document.getElementById('checkinBackdrop');
+    const checkinForm = document.getElementById('checkinForm');
+    function openCheckin(number) { checkinForm.elements.roomNumber.value = number; document.getElementById('checkinRoomLabel').textContent = `Phòng ${number} · nhập thông tin lưu trú`; const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1); checkinForm.elements.plannedCheckout.min = tomorrow.toISOString().slice(0,10); checkinForm.elements.plannedCheckout.value = checkinForm.elements.plannedCheckout.min; checkinBackdrop.hidden = false; checkinForm.elements.guestName.focus(); }
+    async function roomAction(number, action) { const response = await fetch(`/api/rooms/${number}`, { method:'PATCH', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action}) }); const result = await response.json(); if(!response.ok) throw new Error(result.error || 'Không thể cập nhật phòng.'); await loadRooms(); }
+    async function loadRooms() {
+      try {
+        const response = await fetch('/api/rooms', {credentials:'include',cache:'no-store'}); const data = await response.json(); if(!response.ok) throw new Error(data.error || 'Không tải được sơ đồ phòng.');
+        roomGrid.innerHTML = data.rooms.map(room => { const state = roomLabels[room.status] || room.status; const roomOrders = receptionOrders.filter(order => order.table === `Phòng ${room.number}`); const unpaid = roomOrders.filter(order => order.status !== 'paid'); const detail = room.status === 'occupied' ? `${escapeHtml(room.guestName)} · Trả ${escapeHtml(room.plannedCheckout)} · ${unpaid.length ? `Còn ${unpaid.length} hóa đơn chưa thu` : 'Dịch vụ đã thanh toán'}` : room.status === 'cleaning' && room.lastGuestName ? `Khách vừa trả: ${escapeHtml(room.lastGuestName)}` : 'Sẵn sàng phục vụ khách'; let actions = '';
+          if(room.status==='available') actions=`<div class="room-status-actions"><button class="primary" data-checkin="${room.number}">Nhận phòng</button><button data-room-action="maintenance" data-room="${room.number}">Bảo trì</button></div>`;
+          if(room.status==='occupied') actions=`<div class="room-status-actions"><button data-show-qr="${room.number}">Hiện QR cho khách</button><a class="qr-demo-link" href="${getRoomServiceUrl(room.number)}" target="_blank" rel="noopener">Mở dịch vụ khách</a><button class="primary" data-room-action="check_out" data-room="${room.number}" ${unpaid.length ? 'disabled title="Hãy xác nhận thanh toán hóa đơn dịch vụ trước"' : ''}>${unpaid.length ? 'Chờ thanh toán' : 'Trả phòng'}</button></div>`;
+          if(room.status==='maintenance') actions=`<div class="room-status-actions"><button data-room-action="maintenance_done" data-room="${room.number}">Đã sửa xong</button></div>`;
+          return `<article class="room-status-card ${room.status}"><h3>Phòng ${room.number}<span class="room-state">${state}</span></h3><p>${detail}</p>${actions}</article>`; }).join('');
+      } catch(error) { roomGrid.textContent=error.message; }
+    }
+    roomGrid.addEventListener('click', async event => { const checkin=event.target.closest('[data-checkin]'); if(checkin)return openCheckin(checkin.dataset.checkin); const qrButton=event.target.closest('[data-show-qr]'); if(qrButton){showRoomQr(qrButton.dataset.showQr);return;} const button=event.target.closest('[data-room-action]'); if(!button)return; button.disabled=true; try{await roomAction(button.dataset.room,button.dataset.roomAction)}catch(error){alert(error.message);button.disabled=false;} });
+    document.getElementById('cancelCheckin').addEventListener('click',()=>{checkinBackdrop.hidden=true;checkinForm.reset()});
+    checkinForm.addEventListener('submit',async event=>{event.preventDefault();const button=checkinForm.querySelector('[type="submit"]');button.disabled=true;const body=Object.fromEntries(new FormData(checkinForm));try{const response=await fetch(`/api/rooms/${body.roomNumber}`,{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,action:'check_in'})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Không thể nhận phòng.');checkinBackdrop.hidden=true;checkinForm.reset();await loadRooms();showRoomQr(body.roomNumber);}catch(error){alert(error.message)}finally{button.disabled=false}});
+
+    function getRoomServiceUrl(roomNumber) { const base = document.getElementById('baseUrl').value.trim() || `${location.origin}/khach-hang.html`; const url = new URL(base, location.origin); url.search = ''; url.searchParams.set('room', roomNumber); return url.href; }
+    function showRoomQr(roomNumber) {
+      const cards = [...document.querySelectorAll('.table-qr-card')];
+      cards.forEach(card => { card.hidden = !card.querySelector('.table-title')?.textContent.includes(String(roomNumber)); });
+      const selected = cards.find(card => !card.hidden);
+      if (selected) {
+        const image = selected.querySelector('.qr-img'); const url = getRoomServiceUrl(roomNumber);
+        document.getElementById('guestQrTitle').textContent = `Mã QR dịch vụ · Phòng ${roomNumber}`;
+        document.getElementById('guestQrImage').src = image?.src || '';
+        document.getElementById('guestQrOpenLink').href = url;
+        document.getElementById('guestQrBackdrop').hidden = false;
+        document.getElementById('closeGuestQr').focus();
+      }
+      else alert(`Chưa tạo được mã QR phòng ${roomNumber}. Hãy kiểm tra địa chỉ máy chủ rồi bấm Cập nhật mã QR.`);
+    }
+    async function closeGuestQr() { document.getElementById('guestQrBackdrop').hidden = true; document.querySelectorAll('.table-qr-card').forEach(card => card.hidden = false); await loadRooms(); document.getElementById('roomStatusGrid').scrollIntoView({behavior:'smooth',block:'start'}); }
+    document.getElementById('closeGuestQr').addEventListener('click', closeGuestQr);
+    document.getElementById('guestQrBackdrop').addEventListener('click', event => { if (event.target.id === 'guestQrBackdrop') closeGuestQr(); });
+    document.getElementById('frontdeskLogout').addEventListener('click', async () => { await fetch('/api/logout', {method:'POST', credentials:'include'}); location.replace('/bo-phan.html'); });
+
+    function checkHostWarning(urlStr) {
+      const alertBox = document.getElementById('ipAlertBox');
+      try {
+        const u = new URL(urlStr);
+        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+          alertBox.className = 'alert-banner danger';
+          alertBox.style.display = 'block';
+          alertBox.innerHTML = `⚠️ <b>CHÚ Ý:</b> Địa chỉ <code>${u.hostname}</code> chỉ mở trên máy chủ, điện thoại khách sẽ không truy cập được. Hãy dùng địa chỉ LAN được máy chủ phát hiện hoặc tên miền HTTPS của khách sạn.`;
+        } else {
+          alertBox.className = 'alert-banner success';
+          alertBox.style.display = 'block';
+          alertBox.innerHTML = `✓ <b>Tuyệt vời:</b> Địa chỉ máy chủ hợp lệ (<code>${u.hostname}</code>). Điện thoại quét mã sẽ mở đúng phòng ngay!`;
+        }
+      } catch (_) {
+        alertBox.style.display = 'none';
+      }
+    }
+
+    function renderQRCodes() {
+      let baseUrl = document.getElementById('baseUrl').value.trim();
+      if (!baseUrl) return;
+      if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+        baseUrl = 'http://' + baseUrl;
+        document.getElementById('baseUrl').value = baseUrl;
+      }
+      localStorage.setItem('hotel_qr_base_url', baseUrl);
+      checkHostWarning(baseUrl);
+
+      const container = document.getElementById('tablesContainer');
+      container.innerHTML = "";
+
+      // Tạo QR cho 12 phòng: Phòng 101 đến Phòng 112
+      for (let i = 1; i <= 12; i++) {
+        const roomNum = 100 + i;
+        const sep = baseUrl.includes('?') ? '&' : '?';
+        const orderUrl = `${baseUrl}${sep}room=${roomNum}`;
+        const safeOrderUrl = orderUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const targetUrl = encodeURIComponent(orderUrl);
+        const qrApi = `https://quickchart.io/qr?text=${targetUrl}&size=180&margin=1`;
+
+        const card = document.createElement('div');
+        card.className = 'table-qr-card';
+        card.innerHTML = `
+          <div class="table-subtitle">Grand Cloud Hotel</div>
+          <div class="table-title">PHÒNG ${roomNum}</div>
+          <a href="${safeOrderUrl}" target="_blank" rel="noopener">
+            <img class="qr-img" src="${qrApi}" alt="Mã QR dịch vụ Phòng ${roomNum}" loading="lazy">
+          </a>
+          <div class="instruction">Quét mã bằng camera để gọi dịch vụ phòng</div>
+          <a class="qr-demo-link" href="${safeOrderUrl}" target="_blank" rel="noopener">Mở thử Phòng ${roomNum} →</a>
+          <div class="qr-dest-url">${orderUrl}</div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function applyCustomUrl() {
+      renderQRCodes();
+    }
+
+    function selectIp(ip) {
+      const input = document.getElementById('baseUrl');
+      try {
+        const appPort = location.port || '80';
+        const u = new URL(input.value || `${location.protocol}//${ip}${location.port ? `:${appPort}` : ''}/khach-hang.html`);
+        u.hostname = ip;
+        input.value = u.href;
+      } catch (_) {
+        const port = location.port || '80';
+        input.value = `http://${ip}:${port}/khach-hang.html`;
+      }
+      renderQRCodes();
+    }
+
+    function switchPort(port) {
+      const input = document.getElementById('baseUrl');
+      try {
+        const u = new URL(input.value || `http://${DEFAULT_LAN_IP}:${port}/khach-hang.html`);
+        u.port = port;
+        input.value = u.href;
+      } catch (_) {
+        input.value = `http://${DEFAULT_LAN_IP}:${port}/khach-hang.html`;
+      }
+      renderQRCodes();
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadReceptionOrders();
+      await loadRooms();
+      await loadReservations();
+      setInterval(async () => { await loadReceptionOrders(); await loadRooms(); }, 15000);
+      const input = document.getElementById('baseUrl');
+      let initialUrl = '';
+
+      try {
+        const res = await fetch('/api/network', { cache: 'no-store' });
+        if (res.ok) {
+          const network = await res.json();
+          if (network.url) initialUrl = network.url;
+        }
+      } catch (_) {}
+
+      if (!initialUrl) {
+        initialUrl = `${location.protocol}//${DEFAULT_LAN_IP}${location.port ? `:${location.port}` : ''}/khach-hang.html`;
+      }
+
+      const room = new URLSearchParams(location.search).get('room');
+      if (room) initialUrl = `${initialUrl.split('?')[0]}?room=${encodeURIComponent(room)}`;
+      input.value = initialUrl;
+      renderQRCodes();
+      if (room) showRoomQr(room);
+    });
+  </script>
+</body>
+</html>
