@@ -2,10 +2,16 @@ const form = document.getElementById('staffLogin');
 const API_BASE = '';
 const passwordInput = document.getElementById('staffPassword');
 const passwordToggle = document.getElementById('togglePassword');
-const EXPECTED_SERVER_VERSION = '2026-11-03-frontdesk-shared-ops-3';
+const EXPECTED_SERVER_VERSION = '2026-11-03-guest-room-qr-realtime-1';
 const loginParams = new URLSearchParams(location.search);
 const requestedRole = loginParams.get('role');
-if (requestedRole && [...document.getElementById('staffRole').options].some(option => option.value === requestedRole)) document.getElementById('staffRole').value = requestedRole;
+const roleSelect = document.getElementById('staffRole');
+const usernameInput = document.getElementById('staffUsername');
+const roleAccounts = { receptionist: 'letan', cashier: 'thungan', kitchen: 'bep', housekeeping: 'buongphong', manager: 'quanly' };
+if (requestedRole && [...roleSelect.options].some(option => option.value === requestedRole)) roleSelect.value = requestedRole;
+function syncRoleAccount() { usernameInput.value = roleAccounts[roleSelect.value] || ''; }
+roleSelect.addEventListener('change', syncRoleAccount);
+syncRoleAccount();
 passwordToggle.addEventListener('click', () => {
   const reveal = passwordInput.type === 'password';
   passwordInput.type = reveal ? 'text' : 'password';
@@ -24,7 +30,7 @@ form.addEventListener('submit', async event => {
       throw new Error('Bạn đang mở máy chủ cũ nên tài khoản không được nhận. Hãy chạy start-pos.bat trong thư mục dự án và đăng nhập ở trang vừa được mở.');
     }
     const role = document.getElementById('staffRole').value;
-    const response = await fetch(`${API_BASE}/api/login`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role, username: document.getElementById('staffUsername').value.trim(), password: document.getElementById('staffPassword').value.trim() }) });
+    const response = await fetch(`${API_BASE}/api/login`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role, username: roleAccounts[role], password: document.getElementById('staffPassword').value.trim() }) });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Đăng nhập thất bại.');
     const requested = loginParams.get('next');

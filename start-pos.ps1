@@ -5,7 +5,7 @@ if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
 }
 
 $projectPath = $PSScriptRoot
-$buildVersion = '2026-11-03-frontdesk-shared-ops-3'
+$buildVersion = '2026-11-03-guest-room-qr-realtime-1'
 $readyPort = $null
 
 # Reuse a matching current server if it is already running.

@@ -96,7 +96,7 @@ function renderManagerTasks(unpaid) {
   const tasks = [];
   const cleaning = rooms.filter(room => room.status === 'cleaning').length;
   const maintenance = rooms.filter(room => room.status === 'maintenance').length;
-  const pendingBookings = reservations.filter(row => row.status === 'pending').length;
+  const pendingBookings = reservations.filter(row => String(row.status).toLowerCase() === 'pending').length;
   const readyBills = unpaid.filter(order => ['ready', 'served'].includes(order.status)).length;
   const low = inventory.filter(item => item.quantity <= item.minimum);
   if (cleaning) tasks.push(`Điều phối buồng phòng dọn ${cleaning} phòng vừa trả.`);
@@ -116,12 +116,11 @@ function renderAdmin() {
   document.getElementById('unpaidStat').textContent = unpaid.filter(order => ['ready', 'served'].includes(order.status)).length;
   const activeTables = new Set(unpaid.map(order => order.table));
   const occupied = rooms.length ? rooms.filter(room => room.status === 'occupied').length : activeTables.size;
-  document.getElementById('occupiedStat').textContent = `${occupied} / 12`;
+  document.getElementById('occupiedStat').textContent = `${occupied} / ${rooms.length || 12}`;
   
-  // 12 phòng từ Phòng 101 đến Phòng 112
   const roomGrid = document.getElementById('tablesGrid');
-  if (roomGrid) roomGrid.innerHTML = Array.from({ length: 12 }, (_, index) => {
-    const number = 101 + index; const room = rooms.find(row => row.number === number) || { number, status: 'available' };
+  if (roomGrid) roomGrid.innerHTML = (rooms.length ? rooms : Array.from({ length: 12 }, (_, index) => ({ number: 101 + index, status: 'available' }))).map(room => {
+    const number = room.number;
     const open = unpaid.filter(order => order.table === `Phòng ${number}`);
     const statusLabels = { available: 'Phòng trống · sẵn sàng nhận khách', occupied: `${safe(room.guestName)} · trả ${safe(room.plannedCheckout)}`, cleaning: 'Đang chờ buồng phòng dọn', maintenance: 'Tạm ngừng nhận khách · bảo trì' };
     const statusIcons = { available: '✓', occupied: '●', cleaning: '🧹', maintenance: '⚒' };

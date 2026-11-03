@@ -17,10 +17,10 @@
       <label for="staffRole">Bộ phận</label>
       <select id="staffRole" required><option value="receptionist">Tiếp tân</option><option value="cashier">Thu ngân</option><option value="housekeeping">Buồng phòng · Vận hành chung</option><option value="kitchen">Bếp &amp; phục vụ · Vận hành chung</option><option value="manager">Quản lý</option></select>
       <label for="staffUsername">Tài khoản</label>
-      <input id="staffUsername" autocomplete="username" required autofocus>
+      <input id="staffUsername" name="username" autocomplete="username" required readonly aria-readonly="true" title="Tài khoản được tự động điền theo bộ phận">
       <label for="staffPassword">Mật khẩu</label>
       <div class="password-field">
-        <input id="staffPassword" type="password" autocomplete="current-password" required>
+        <input id="staffPassword" type="password" autocomplete="current-password" required autofocus>
         <button id="togglePassword" class="password-toggle" type="button" aria-label="Hiện mật khẩu" aria-pressed="false" title="Hiện mật khẩu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
       </div>
       <button type="submit">Đăng nhập</button>

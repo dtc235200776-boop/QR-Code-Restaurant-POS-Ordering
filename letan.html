@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lễ tân · Tiếp nhận khách &amp; QR phòng · Grand Cloud Hotel</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     :root {
       --primary: #2563eb;
@@ -30,6 +31,8 @@
     .reservation-actions { display: flex; gap: 8px; }
     .reservation-actions button { border: 0; border-radius: 9px; padding: 9px 12px; background: #7b5134; color: #fff; font-weight: 700; cursor: pointer; }
     .reservation-actions button[data-status="rejected"] { background: #f5eae2; color: #84442d; }
+    .booking-scan-tools { display:grid; grid-template-columns:minmax(220px,1fr) auto auto; gap:9px; margin:0 0 14px; }.booking-scan-tools input,.booking-confirm-card select { min-width:0; height:42px; padding:0 11px; border:1px solid #dfd0bd; border-radius:8px; background:#fff; }.booking-scan-tools button { padding:9px 13px; border:0; border-radius:8px; background:#765034; color:#fff; font-weight:800; cursor:pointer; }.booking-scan-tools button.secondary { background:#f4eadc; color:#65462c; border:1px solid #decdb6; }.booking-scan-status { margin:8px 0 0; color:#796750; font-size:12px; }.booking-camera { width:min(420px,100%); max-height:260px; margin:12px auto 0; border-radius:12px; background:#1f2937; }.booking-camera[hidden] { display:none; }
+    .booking-confirm-backdrop { position:fixed; inset:0; z-index:11000; display:grid; place-items:center; padding:16px; background:#21180fcc; }.booking-confirm-backdrop[hidden] { display:none !important; }.booking-confirm-card { width:min(520px,100%); max-height:90vh; overflow:auto; padding:22px; border-radius:16px; background:#fffdf9; box-shadow:0 25px 80px #0005; }.booking-confirm-card h2 { margin:0 0 6px; color:#563d29; }.booking-confirm-card p { margin:0 0 14px; color:#8a7763; font-size:12px; }.booking-confirm-details { display:grid; gap:7px; margin:14px 0; padding:13px; border:1px solid #eee4d7; border-radius:10px; background:#fffcf7; font-size:13px; }.booking-confirm-card label { display:grid; gap:6px; color:#70553a; font-size:12px; font-weight:700; }.booking-confirm-card [hidden] { display:none !important; }.booking-confirm-actions { display:flex; gap:8px; margin-top:16px; }.booking-confirm-actions button { flex:1; padding:11px; border:1px solid #d8c7b1; border-radius:8px; background:#f7f0e6; color:#64482f; font-weight:800; cursor:pointer; }.booking-confirm-actions button[type="submit"] { background:#765034; color:white; }.booking-confirm-actions button:disabled { opacity:.6; cursor:wait; }
     .room-status-panel { margin: 0 0 22px; padding: 22px; border: 1px solid #e7d8c6; border-radius: 18px; background: #fff; box-shadow: 0 8px 24px #5437190c; }
     .room-status-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; }
     .room-status-heading h2 { margin:0; color:#563d29; font-size:21px; }.room-status-heading p { margin:5px 0 0; color:#8a7763; font-size:12px; }
@@ -67,7 +70,7 @@
     .checkin-card h2 { margin:0 0 5px; color:#563d29; }.checkin-card p { margin:0 0 15px; color:#8a7763; font-size:12px; }
     .checkin-card form { display:grid; gap:10px; }.checkin-card label { display:grid; gap:5px; color:#70553a; font-size:11px; font-weight:700; }.checkin-card input { height:40px; padding:0 10px; border:1px solid #dfd0bd; border-radius:7px; background:white; }
     .checkin-actions { display:flex; gap:8px; margin-top:6px; }.checkin-actions button { flex:1; padding:11px; border:1px solid #d8c7b1; border-radius:8px; background:#f7f0e6; color:#64482f; font-weight:800; cursor:pointer; }.checkin-actions button[type="submit"] { background:#765034; color:white; }
-    @media(max-width:650px){.reservation-row{align-items:flex-start;flex-direction:column}.reservation-actions{width:100%}.reservation-actions button{flex:1}}
+    @media(max-width:650px){.reservation-row{align-items:flex-start;flex-direction:column}.reservation-actions{width:100%}.reservation-actions button{flex:1}.booking-scan-tools{grid-template-columns:1fr 1fr}.booking-scan-tools input{grid-column:1/-1}.booking-confirm-actions{flex-direction:column}}
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: #f8fafc;
@@ -311,7 +314,7 @@
   </style>
   <script src="runtime.js?v=20261103g"></script>
 </head>
-<body>
+<body class="reception-body">
   <div class="container">
     <div class="print-header">
       <h1>Lễ tân · Phòng &amp; Mã QR dịch vụ</h1>
@@ -332,7 +335,10 @@
 
     <section class="reservation-panel">
       <h2>Yêu cầu đặt phòng trực tuyến</h2>
-      <p>Tiếp nhận và xác nhận yêu cầu khách gửi từ trang chủ.</p>
+      <p>Quét QR hoặc nhập Booking ID để tra cứu, xác nhận thông tin và làm thủ tục nhận phòng.</p>
+      <div class="booking-scan-tools"><input id="bookingIdInput" autocomplete="off" placeholder="Nhập Booking ID, ví dụ BK-2026-8899"><button id="lookupBookingButton" type="button">Tra cứu booking</button><button id="startBookingScan" class="secondary" type="button">Quét QR bằng camera</button></div>
+      <video id="bookingCamera" class="booking-camera" playsinline muted hidden></video>
+      <p id="bookingScanStatus" class="booking-scan-status" role="status" aria-live="polite"></p>
       <div class="reservation-list" id="reservationList">Đang tải yêu cầu đặt phòng…</div>
     </section>
 
@@ -391,6 +397,13 @@
       <div class="guest-qr-actions"><a id="guestQrOpenLink" href="#" target="_blank" rel="noopener">Mở thử trang khách</a><button id="closeGuestQr" type="button">Xong · quay lại sơ đồ phòng</button></div>
     </section>
   </div>
+  <div id="bookingConfirmBackdrop" class="booking-confirm-backdrop" hidden>
+    <section class="booking-confirm-card" role="dialog" aria-modal="true" aria-labelledby="bookingConfirmTitle">
+      <h2 id="bookingConfirmTitle">Xác nhận thông tin Check-in</h2><p>Đối chiếu thông tin khách và chọn phòng thực tế còn trống.</p>
+      <div id="bookingConfirmDetails" class="booking-confirm-details"></div>
+      <form id="bookingCheckinForm"><label>Gán số phòng<select name="roomNumber" id="bookingRoomSelect" required></select></label><label id="customRoomWrap" hidden>Nhập số phòng thực tế<input id="customRoomNumber" type="number" min="100" max="999" placeholder="Ví dụ: 302"></label><div class="booking-confirm-actions"><button type="button" id="cancelBookingCheckin">Hủy</button><button type="submit">Xác nhận Check-in</button></div></form>
+    </section>
+  </div>
 
   <script>
     const DEFAULT_LAN_IP = location.hostname;
@@ -432,12 +445,14 @@
         const statuses = { pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', checked_in: 'Khách đã nhận phòng', completed: 'Đã trả phòng', rejected: 'Đã từ chối', cancelled: 'Đã hủy' };
         target.innerHTML = data.reservations.length ? data.reservations.map(row => `
           <article class="reservation-row"><div><strong>${escapeHtml(row.guestName)} · ${escapeHtml(row.phone)}</strong>
+          <small>${escapeHtml(row.email || 'Chưa có email')} · ${escapeHtml(row.roomTypeLabel || row.roomType || 'Chưa chọn loại phòng')}</small>
           <small>${escapeHtml(row.checkIn)} → ${escapeHtml(row.checkOut)} · ${row.guests} khách · ${escapeHtml(row.id)}</small>
-          <small>Trạng thái: ${statuses[row.status] || escapeHtml(row.status)}</small></div>
-          ${row.status === 'pending' ? `<div class="reservation-actions"><button data-reservation="${escapeHtml(row.id)}" data-status="confirmed">Xác nhận</button><button data-reservation="${escapeHtml(row.id)}" data-status="rejected">Từ chối</button></div>` : ''}</article>`).join('') : 'Chưa có yêu cầu đặt phòng mới.';
+          <small>Trạng thái: ${statuses[String(row.status).toLowerCase()] || escapeHtml(row.status)}</small></div>
+          ${['pending','confirmed'].includes(String(row.status).toLowerCase()) ? `<div class="reservation-actions">${String(row.status).toLowerCase() === 'pending' ? `<button data-reservation="${escapeHtml(row.id)}" data-status="confirmed">Xác nhận</button><button data-reservation="${escapeHtml(row.id)}" data-status="rejected">Từ chối</button>` : ''}<button data-checkin-booking="${escapeHtml(row.id)}">Check-in</button></div>` : ''}</article>`).join('') : 'Chưa có yêu cầu đặt phòng mới.';
       } catch (error) { target.textContent = error.message; }
     }
     document.getElementById('reservationList').addEventListener('click', async event => {
+      const checkin = event.target.closest('[data-checkin-booking]'); if (checkin) { document.getElementById('bookingIdInput').value = checkin.dataset.checkinBooking; await lookupBooking(checkin.dataset.checkinBooking); return; }
       const button = event.target.closest('[data-reservation]'); if (!button) return;
       button.disabled = true;
       try {
@@ -445,6 +460,84 @@
         const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không thể cập nhật yêu cầu.');
         await loadReservations();
       } catch (error) { alert(error.message); button.disabled = false; }
+    });
+
+    const bookingIdInput = document.getElementById('bookingIdInput');
+    const bookingScanStatus = document.getElementById('bookingScanStatus');
+    const bookingCamera = document.getElementById('bookingCamera');
+    const bookingConfirmBackdrop = document.getElementById('bookingConfirmBackdrop');
+    const bookingCheckinForm = document.getElementById('bookingCheckinForm');
+    let selectedBookingId = '';
+    let bookingCameraStream = null;
+    let bookingScannerTimer = null;
+    function parseBookingId(rawValue) {
+      const value = String(rawValue || '').trim();
+      try { const url = new URL(value); return url.searchParams.get('booking') || value.match(/BK-\d{4}-\d+/i)?.[0] || ''; }
+      catch (_) { return value.match(/BK-\d{4}-\d+/i)?.[0] || ''; }
+    }
+    async function lookupBooking(rawValue = bookingIdInput.value) {
+      const bookingId = parseBookingId(rawValue);
+      if (!bookingId) { bookingScanStatus.textContent = 'Mã không hợp lệ. Hãy nhập mã BK-năm-số hoặc quét QR đặt phòng.'; return; }
+      bookingIdInput.value = bookingId; bookingScanStatus.textContent = `Đang tra cứu ${bookingId}…`;
+      try {
+        const response = await fetch(`/api/reservations/${encodeURIComponent(bookingId)}`, { credentials:'include', cache:'no-store' });
+        const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Không tìm thấy booking.');
+        const reservation = data.reservation;
+        if (!['pending','confirmed'].includes(String(reservation.status).toLowerCase())) throw new Error(`Booking này đang ở trạng thái ${reservation.status}; không thể Check-in.`);
+        const roomsResponse = await fetch('/api/rooms', { credentials:'include', cache:'no-store' }); const roomsData = await roomsResponse.json();
+        if (!roomsResponse.ok) throw new Error(roomsData.error || 'Không tải được danh sách phòng.');
+        const available = roomsData.rooms.filter(room => room.status === 'available');
+        if (!available.length) throw new Error('Hiện không có phòng trống để gán.');
+        selectedBookingId = reservation.id;
+        document.getElementById('bookingConfirmDetails').innerHTML = `<strong>${escapeHtml(reservation.guestName)} · ${escapeHtml(reservation.phone)}</strong><span>${escapeHtml(reservation.email || 'Không có email')}</span><span>${escapeHtml(reservation.roomTypeLabel || reservation.roomType || 'Chưa chọn loại phòng')} · ${reservation.guests || 1} khách</span><span>${escapeHtml(reservation.checkIn)} → ${escapeHtml(reservation.checkOut)} · Booking ${escapeHtml(reservation.id)}</span><span>Trạng thái: ${String(reservation.status).toUpperCase()}</span>`;
+        document.getElementById('bookingRoomSelect').innerHTML = `${available.map(room => `<option value="${room.number}">Phòng ${room.number} · Trống</option>`).join('')}<option value="custom">Nhập số phòng khác…</option>`;
+        document.getElementById('customRoomWrap').hidden = true; document.getElementById('customRoomNumber').value = '';
+        bookingConfirmBackdrop.hidden = false; bookingScanStatus.textContent = 'Đã tìm thấy booking. Kiểm tra thông tin khách và xác nhận phòng.';
+        document.getElementById('bookingRoomSelect').focus();
+      } catch (error) { bookingScanStatus.textContent = error.message; }
+    }
+    document.getElementById('lookupBookingButton').addEventListener('click', () => lookupBooking());
+    bookingIdInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); lookupBooking(); } });
+    document.getElementById('bookingRoomSelect').addEventListener('change', event => { document.getElementById('customRoomWrap').hidden = event.target.value !== 'custom'; if (event.target.value === 'custom') document.getElementById('customRoomNumber').focus(); });
+    document.getElementById('cancelBookingCheckin').addEventListener('click', () => { bookingConfirmBackdrop.hidden = true; selectedBookingId = ''; });
+    bookingConfirmBackdrop.addEventListener('click', event => { if (event.target === bookingConfirmBackdrop) { bookingConfirmBackdrop.hidden = true; selectedBookingId = ''; } });
+    bookingCheckinForm.addEventListener('submit', async event => {
+      event.preventDefault(); if (!selectedBookingId) return;
+      const button = bookingCheckinForm.querySelector('[type="submit"]'); button.disabled = true;
+      try {
+        const roomNumber = bookingCheckinForm.elements.roomNumber.value === 'custom' ? document.getElementById('customRoomNumber').value : bookingCheckinForm.elements.roomNumber.value;
+        if (!roomNumber) throw new Error('Hãy nhập số phòng thực tế.');
+        const response = await fetch(`/api/reservations/${encodeURIComponent(selectedBookingId)}/check-in`, { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ roomNumber }) });
+        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không thể hoàn tất Check-in.');
+        bookingConfirmBackdrop.hidden = true; selectedBookingId = ''; bookingCheckinForm.reset();
+        bookingScanStatus.textContent = `Đã Check-in ${result.reservation.id} vào Phòng ${result.room.number}. QR dịch vụ phòng đã sẵn sàng.`;
+        await loadReservations(); await loadRooms(); showRoomQr(result.room.number);
+      } catch (error) { bookingScanStatus.textContent = error.message; }
+      finally { button.disabled = false; }
+    });
+    function stopBookingCamera() {
+      if (bookingScannerTimer) clearTimeout(bookingScannerTimer); bookingScannerTimer = null;
+      if (bookingCameraStream) bookingCameraStream.getTracks().forEach(track => track.stop()); bookingCameraStream = null;
+      bookingCamera.srcObject = null; bookingCamera.hidden = true;
+      document.getElementById('startBookingScan').textContent = 'Quét QR bằng camera';
+    }
+    document.getElementById('startBookingScan').addEventListener('click', async event => {
+      if (bookingCameraStream) { stopBookingCamera(); bookingScanStatus.textContent = 'Đã dừng camera. Bạn vẫn có thể nhập Booking ID thủ công.'; return; }
+      if (!('BarcodeDetector' in window) || !navigator.mediaDevices?.getUserMedia) { bookingScanStatus.textContent = 'Trình duyệt chưa hỗ trợ quét QR camera. Hãy nhập Booking ID vào ô bên cạnh.'; return; }
+      const scanButton = event.currentTarget;
+      try {
+        const detector = new BarcodeDetector({ formats:['qr_code'] });
+        bookingCameraStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false });
+        bookingCamera.srcObject = bookingCameraStream; bookingCamera.hidden = false; await bookingCamera.play();
+        scanButton.textContent = 'Dừng quét'; bookingScanStatus.textContent = 'Hướng camera vào mã QR đặt phòng.';
+        const scan = async () => {
+          if (!bookingCameraStream) return;
+          try { const codes = await detector.detect(bookingCamera); const bookingId = codes.map(code => parseBookingId(code.rawValue)).find(Boolean); if (bookingId) { stopBookingCamera(); bookingIdInput.value = bookingId; await lookupBooking(bookingId); return; } }
+          catch (_) {}
+          bookingScannerTimer = setTimeout(scan, 350);
+        };
+        scan();
+      } catch (_) { stopBookingCamera(); bookingScanStatus.textContent = 'Không mở được camera. Hãy cấp quyền camera hoặc nhập Booking ID thủ công.'; }
     });
 
     const roomLabels = { available: 'Phòng trống', occupied: 'Đang lưu trú', cleaning: 'Chờ dọn phòng', maintenance: 'Đang bảo trì' };
@@ -472,15 +565,12 @@
       const cards = [...document.querySelectorAll('.table-qr-card')];
       cards.forEach(card => { card.hidden = !card.querySelector('.table-title')?.textContent.includes(String(roomNumber)); });
       const selected = cards.find(card => !card.hidden);
-      if (selected) {
-        const image = selected.querySelector('.qr-img'); const url = getRoomServiceUrl(roomNumber);
-        document.getElementById('guestQrTitle').textContent = `Mã QR dịch vụ · Phòng ${roomNumber}`;
-        document.getElementById('guestQrImage').src = image?.src || '';
-        document.getElementById('guestQrOpenLink').href = url;
-        document.getElementById('guestQrBackdrop').hidden = false;
-        document.getElementById('closeGuestQr').focus();
-      }
-      else alert(`Chưa tạo được mã QR phòng ${roomNumber}. Hãy kiểm tra địa chỉ máy chủ rồi bấm Cập nhật mã QR.`);
+      const url = getRoomServiceUrl(roomNumber); const image = selected?.querySelector('.qr-img');
+      document.getElementById('guestQrTitle').textContent = `Mã QR dịch vụ · Phòng ${roomNumber}`;
+      document.getElementById('guestQrImage').src = image?.src || `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=220&margin=1`;
+      document.getElementById('guestQrOpenLink').href = url;
+      document.getElementById('guestQrBackdrop').hidden = false;
+      document.getElementById('closeGuestQr').focus();
     }
     async function closeGuestQr() { document.getElementById('guestQrBackdrop').hidden = true; document.querySelectorAll('.table-qr-card').forEach(card => card.hidden = false); await loadRooms(); document.getElementById('roomStatusGrid').scrollIntoView({behavior:'smooth',block:'start'}); }
     document.getElementById('closeGuestQr').addEventListener('click', closeGuestQr);

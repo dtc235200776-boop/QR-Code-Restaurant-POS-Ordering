@@ -22,7 +22,7 @@
       <a href="khach-hang.html#drinkSection">Ẩm thực</a>
       <a href="#booking">Đặt phòng</a>
     </nav>
-    <a class="home-book-link" href="#booking">Kiểm tra phòng <span>↗</span></a>
+    <div class="home-header-actions"><a id="staffPortalReturn" class="staff-portal-return" href="/bo-phan.html" hidden>← Quay lại Cổng Nội Bộ</a><a class="home-book-link" href="#booking">Kiểm tra phòng <span>↗</span></a></div>
   </header>
 
   <main>
@@ -42,11 +42,13 @@
     <section class="booking-shell" id="booking">
       <div class="booking-heading"><span class="eyebrow-wood">LÊN KẾ HOẠCH LƯU TRÚ</span><h2>Tìm kỳ nghỉ phù hợp</h2></div>
       <form id="bookingForm" class="booking-form">
+        <label><span>Họ và tên</span><input name="guestName" maxlength="80" autocomplete="name" placeholder="Tên người đặt phòng" required></label>
+        <label><span>Số điện thoại</span><input name="phone" type="tel" maxlength="30" autocomplete="tel" placeholder="Số liên hệ" required></label>
+        <label><span>Email</span><input name="email" type="email" maxlength="120" autocomplete="email" placeholder="email@example.com" required></label>
+        <label><span>Loại phòng</span><select name="roomType" required><option value="standard">Phòng tiêu chuẩn</option><option value="deluxe">Phòng Deluxe</option><option value="suite">Phòng Suite</option></select></label>
         <label><span>Ngày nhận phòng</span><input id="checkIn" name="checkIn" type="date" required></label>
         <label><span>Ngày trả phòng</span><input id="checkOut" name="checkOut" type="date" required></label>
         <label><span>Số khách</span><select id="guests" name="guests"><option value="1">1 khách</option><option value="2" selected>2 khách</option><option value="3">3 khách</option><option value="4">4 khách</option></select></label>
-        <label><span>Họ và tên</span><input name="guestName" maxlength="80" placeholder="Tên người đặt phòng" required></label>
-        <label><span>Số điện thoại</span><input name="phone" type="tel" maxlength="30" placeholder="Số liên hệ" required></label>
         <button class="button-wood booking-submit" type="submit">Gửi yêu cầu <span>→</span></button>
       </form>
       <p class="booking-note">Yêu cầu được gửi tới tiếp tân để xác nhận. Gửi yêu cầu chưa đồng nghĩa với đặt phòng đã được xác nhận.</p>

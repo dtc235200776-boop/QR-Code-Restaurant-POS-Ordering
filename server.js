@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const os = require('node:os');
 
 const ROOT = __dirname;
-const BUILD_VERSION = '2026-11-03-frontdesk-shared-ops-3';
+const BUILD_VERSION = '2026-11-03-guest-room-qr-realtime-1';
 const DATA_FILE = path.join(ROOT, 'data.json');
 let PORT = Number(process.env.PORT || 3000);
 const STAFF_ACCOUNTS = {
@@ -42,6 +42,8 @@ const seedServices = [
   { id: 6, section: 'housekeeping', category: 'laundry', name: 'Giặt hấp ủi cao cấp (Vest / Đầm)', price: 85000, desc: 'Giặt hấp chuyên dụng giữ phom dáng đồ cao cấp', icon: '👗', salePercent: 0 },
   { id: 7, section: 'housekeeping', category: 'rental', name: 'Thuê xe máy tay ga (Theo ngày)', price: 150000, desc: 'Xe tay ga đời mới, kèm 2 mũ bảo hiểm và giao xe tại sảnh', icon: '🛵', salePercent: 0 },
   { id: 8, section: 'housekeeping', category: 'rental', name: 'Xe đưa đón sân bay 4-7 chỗ', price: 320000, desc: 'Xe riêng đưa đón tận sảnh khách sạn đúng giờ hẹn', icon: '🚗', salePercent: 0 },
+  { id: 21, section: 'housekeeping', category: 'amenities', name: 'Bổ sung nước uống trong phòng', price: 0, desc: 'Nhân viên buồng phòng giao thêm nước uống đóng chai đến phòng', icon: '💧', salePercent: 0 },
+  { id: 22, section: 'housekeeping', category: 'amenities', name: 'Yêu cầu hỗ trợ tại phòng', price: 0, desc: 'Gọi nhân viên hỗ trợ và phối hợp lễ tân khi cần thiết', icon: '🛎️', salePercent: 0 },
 
   // 2. Ẩm thực & Minibar tại phòng (In-Room Dining)
   { id: 9, section: 'dining', category: 'breakfast', name: 'Set Ăn sáng kiểu Âu (Continental)', price: 65000, desc: 'Bánh sừng bò, trứng ốp la, xúc xích Đức, bơ mứt và nước cam', icon: '🍳', salePercent: 10 },
@@ -63,6 +65,12 @@ if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, JSON.stringify({ menu
 
 const readStore = () => {
   const store = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  if (!Array.isArray(store.menu)) store.menu = seedServices.map(item => ({ ...item }));
+  else {
+    let menuChanged = false;
+    for (const item of seedServices) if (!store.menu.some(existing => existing.id === item.id)) { store.menu.push({ ...item }); menuChanged = true; }
+    if (menuChanged) writeStore(store);
+  }
   if (!Array.isArray(store.reservations)) store.reservations = [];
   if (!Array.isArray(store.rooms)) store.rooms = Array.from({ length: 12 }, (_, index) => ({ number: 101 + index, status: 'available', guestName: '', guestPhone: '', checkIn: '', plannedCheckout: '' }));
   if (!Array.isArray(store.inventory)) store.inventory = seedInventory.map(item => ({ ...item }));
@@ -78,9 +86,9 @@ const readBody = req => new Promise((resolve, reject) => { let data = ''; req.on
 function broadcast(order) { for (const client of streams) { if (client.staff || client.table === order.table) client.res.write(`event: order\ndata: ${JSON.stringify(order)}\n\n`); } }
 function updateOrder(store, order) { const index = store.orders.findIndex(row => row.id === order.id); if (index >= 0) store.orders[index] = order; writeStore(store); broadcast(order); }
 function availableRooms(store, checkIn, checkOut) {
-  const active = store.reservations.filter(row => ['pending', 'confirmed'].includes(row.status) && row.checkIn < checkOut && row.checkOut > checkIn);
+  const active = store.reservations.filter(row => ['pending', 'confirmed'].includes(String(row.status).toLowerCase()) && row.checkIn < checkOut && row.checkOut > checkIn);
   const heldRooms = store.rooms.filter(room => room.status === 'cleaning' || room.status === 'maintenance' || (room.status === 'occupied' && room.checkIn < checkOut && room.plannedCheckout > checkIn)).length;
-  return Math.max(0, 12 - heldRooms - active.length);
+  return Math.max(0, store.rooms.length - heldRooms - active.length);
 }
 const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value;
 
@@ -165,7 +173,7 @@ const server = http.createServer(async (req, res) => {
         if (room.status !== 'available') return sendJson(res, 409, { error: 'Phòng chưa sẵn sàng nhận khách.' });
         if (!guestName || !guestPhone || !validDate(plannedCheckout) || plannedCheckout <= new Date().toISOString().slice(0, 10)) return sendJson(res, 400, { error: 'Cần nhập tên khách, số điện thoại và ngày trả phòng hợp lệ.' });
         const today = new Date().toISOString().slice(0, 10);
-        const reservation = store.reservations.find(row => ['pending', 'confirmed'].includes(row.status) && row.phone === guestPhone && row.checkOut === plannedCheckout && row.checkIn <= today);
+        const reservation = store.reservations.find(row => ['pending', 'confirmed'].includes(String(row.status).toLowerCase()) && row.phone === guestPhone && row.checkOut === plannedCheckout && row.checkIn <= today);
         if (reservation) { reservation.status = 'checked_in'; reservation.roomNumber = room.number; reservation.updatedAt = new Date().toISOString(); room.reservationId = reservation.id; }
         room.status = 'occupied'; room.guestName = guestName; room.guestPhone = guestPhone; room.checkIn = today; room.plannedCheckout = plannedCheckout; room.updatedAt = new Date().toISOString();
       } else if (body.action === 'check_out') {
@@ -236,10 +244,13 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url.pathname === '/api/reservations') {
       const body = await readBody(req); const guestName = String(body.guestName || '').trim().slice(0, 80); const phone = String(body.phone || '').trim().slice(0, 30);
+      const email = String(body.email || '').trim().slice(0, 120).toLowerCase(); const roomType = String(body.roomType || '');
       const checkIn = String(body.checkIn || ''); const checkOut = String(body.checkOut || ''); const guests = Number(body.guests || 1);
-      if (!guestName || !phone || !validDate(checkIn) || !validDate(checkOut) || checkOut <= checkIn || !Number.isInteger(guests) || guests < 1 || guests > 4) return sendJson(res, 400, { error: 'Vui lòng điền họ tên, số điện thoại, 1–4 khách và ngày lưu trú hợp lệ.' });
+      const roomTypes = { standard: 'Phòng tiêu chuẩn', deluxe: 'Phòng Deluxe', suite: 'Phòng Suite' };
+      if (!guestName || !phone || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !roomTypes[roomType] || !validDate(checkIn) || !validDate(checkOut) || checkOut <= checkIn || !Number.isInteger(guests) || guests < 1 || guests > 4) return sendJson(res, 400, { error: 'Vui lòng nhập họ tên, số điện thoại, email hợp lệ, loại phòng, 1–4 khách và ngày lưu trú hợp lệ.' });
       const store = readStore(); if (availableRooms(store, checkIn, checkOut) < 1) return sendJson(res, 409, { error: 'Khoảng ngày này đã hết phòng trong hệ thống. Hãy chọn ngày khác hoặc liên hệ tiếp tân.' });
-      const reservation = { id: `BK-${Date.now().toString().slice(-7)}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`, guestName, phone, checkIn, checkOut, guests, status: 'pending', createdAt: new Date().toISOString() };
+      const year = new Date().getFullYear(); let id; do { id = `BK-${year}-${crypto.randomInt(1000, 10000)}`; } while (store.reservations.some(row => row.id === id));
+      const reservation = { id, guestName, phone, email, roomType, roomTypeLabel: roomTypes[roomType], checkIn, checkOut, guests, status: 'PENDING', createdAt: new Date().toISOString() };
       store.reservations.unshift(reservation); writeStore(store); return sendJson(res, 201, { reservation, available: availableRooms(store, checkIn, checkOut) });
     }
     if (req.method === 'GET' && url.pathname === '/api/reservations') {
@@ -247,6 +258,35 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { reservations: readStore().reservations });
     }
     const reservationRoute = url.pathname.match(/^\/api\/reservations\/([^/]+)$/);
+    const reservationCheckinRoute = url.pathname.match(/^\/api\/reservations\/([^/]+)\/check-in$/);
+    if (req.method === 'GET' && reservationRoute) {
+      const reservation = readStore().reservations.find(row => row.id === decodeURIComponent(reservationRoute[1]));
+      if (!reservation) return sendJson(res, 404, { error: 'Không tìm thấy mã đặt phòng.' });
+      const labels = { pending: 'Đang chờ lễ tân xác nhận', confirmed: 'Đã được lễ tân xác nhận', checked_in: 'Đã nhận phòng', completed: 'Đã hoàn tất lưu trú', rejected: 'Yêu cầu bị từ chối', cancelled: 'Yêu cầu đã hủy' };
+      if (canAccess(getRole(req), ['receptionist'])) return sendJson(res, 200, { reservation: { ...reservation, status: String(reservation.status).toUpperCase() } });
+      return sendJson(res, 200, { reservation: { id: reservation.id, status: reservation.status, statusLabel: labels[String(reservation.status).toLowerCase()] || String(reservation.status), roomType: reservation.roomType, roomTypeLabel: reservation.roomTypeLabel, checkIn: reservation.checkIn, checkOut: reservation.checkOut } });
+    }
+    if (req.method === 'POST' && reservationCheckinRoute) {
+      if (!canAccess(getRole(req), ['receptionist'])) return sendJson(res, getRole(req) ? 403 : 401, { error: 'Chỉ lễ tân hoặc quản lý được làm thủ tục Check-in.' });
+      const bookingId = decodeURIComponent(reservationCheckinRoute[1]);
+      const body = await readBody(req); const roomNumber = Number(body.roomNumber);
+      if (!Number.isInteger(roomNumber)) return sendJson(res, 400, { error: 'Vui lòng chọn số phòng hợp lệ.' });
+      const store = readStore(); const reservation = store.reservations.find(row => row.id === bookingId);
+      if (!reservation) return sendJson(res, 404, { error: 'Không tìm thấy mã đặt phòng.' });
+      if (!['pending', 'confirmed'].includes(String(reservation.status).toLowerCase())) return sendJson(res, 409, { error: 'Booking này không còn ở trạng thái chờ nhận phòng.' });
+      const today = new Date().toISOString().slice(0, 10);
+      if (reservation.checkIn > today || reservation.checkOut <= today) return sendJson(res, 409, { error: 'Ngày lưu trú của booking không phù hợp để nhận phòng hôm nay.' });
+      let room = store.rooms.find(item => item.number === roomNumber);
+      if (!room && roomNumber >= 100 && roomNumber <= 999) { room = { number: roomNumber, status: 'available', guestName: '', guestPhone: '', checkIn: '', plannedCheckout: '' }; store.rooms.push(room); }
+      if (!room) return sendJson(res, 400, { error: 'Số phòng phải từ 100 đến 999.' });
+      if (room.status !== 'available') return sendJson(res, 409, { error: `Phòng ${roomNumber} không còn trống. Hãy tải lại sơ đồ và chọn phòng khác.` });
+      room.status = 'occupied'; room.guestName = reservation.guestName; room.guestPhone = reservation.phone;
+      room.checkIn = today; room.plannedCheckout = reservation.checkOut; room.reservationId = reservation.id; room.updatedAt = new Date().toISOString();
+      reservation.status = 'CHECKED_IN'; reservation.roomNumber = roomNumber; reservation.checkedInAt = new Date().toISOString(); reservation.updatedAt = reservation.checkedInAt;
+      reservation.serviceUrl = `/khach-hang.html?room=${roomNumber}`;
+      writeStore(store);
+      return sendJson(res, 200, { reservation, room, serviceUrl: reservation.serviceUrl });
+    }
     if (req.method === 'PATCH' && reservationRoute) {
       if (!canAccess(getRole(req), ['receptionist'])) return sendJson(res, getRole(req) ? 403 : 401, { error: 'Chỉ tiếp tân hoặc quản lý được cập nhật đặt phòng.' });
       const body = await readBody(req); if (!['confirmed', 'rejected', 'cancelled'].includes(body.status)) return sendJson(res, 400, { error: 'Trạng thái đặt phòng không hợp lệ.' });

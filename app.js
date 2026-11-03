@@ -8,6 +8,8 @@ let MENU_ITEMS = [
   { id: 6, section: 'housekeeping', category: 'laundry', name: 'Giặt hấp ủi cao cấp (Vest / Đầm)', price: 85000, desc: 'Giặt hấp chuyên dụng giữ phom dáng đồ cao cấp', icon: '👗', salePercent: 0 },
   { id: 7, section: 'housekeeping', category: 'rental', name: 'Thuê xe máy tay ga (Theo ngày)', price: 150000, desc: 'Xe tay ga đời mới, kèm 2 mũ bảo hiểm và giao xe tại sảnh', icon: '🛵', salePercent: 0 },
   { id: 8, section: 'housekeeping', category: 'rental', name: 'Xe đưa đón sân bay 4-7 chỗ', price: 320000, desc: 'Xe riêng đưa đón tận sảnh khách sạn đúng giờ hẹn', icon: '🚗', salePercent: 0 },
+  { id: 21, section: 'housekeeping', category: 'amenities', name: 'Bổ sung nước uống trong phòng', price: 0, desc: 'Nhân viên buồng phòng giao thêm nước uống đóng chai đến phòng', icon: '💧', salePercent: 0 },
+  { id: 22, section: 'housekeeping', category: 'amenities', name: 'Yêu cầu hỗ trợ tại phòng', price: 0, desc: 'Gọi nhân viên hỗ trợ và phối hợp lễ tân khi cần thiết', icon: '🛎️', salePercent: 0 },
 
   // 2. Ẩm thực & Minibar tại phòng (In-Room Dining)
   { id: 9, section: 'dining', category: 'breakfast', name: 'Set Ăn sáng kiểu Âu (Continental)', price: 65000, desc: 'Bánh sừng bò, trứng ốp la, xúc xích Đức, bơ mứt và nước cam', icon: '🍳', salePercent: 10 },
@@ -29,7 +31,7 @@ let currentTable = null; // Số phòng (ví dụ: Phòng 101)
 const API_BASE = '';
 const apiUrl = path => `${API_BASE}${path}`;
 const money = value => Number(value || 0) === 0 ? 'Miễn phí' : `${Number(value || 0).toLocaleString('vi-VN')}đ`;
-const itemIcons = { 1: '🧹', 2: '🧺', 3: '♨️', 4: '💨', 5: '🧺', 6: '👗', 7: '🛵', 8: '🚘', 9: '🍳', 10: '🍜', 11: '🥩', 12: '🍝', 13: '🥪', 14: '🍉', 15: '☕', 16: '🍵', 17: '🍷', 18: '🥤', 19: '🍺', 20: '💧' };
+const itemIcons = { 1: '🧹', 2: '🧺', 3: '♨️', 4: '💨', 5: '🧺', 6: '👗', 7: '🛵', 8: '🚘', 9: '🍳', 10: '🍜', 11: '🥩', 12: '🍝', 13: '🥪', 14: '🍉', 15: '☕', 16: '🍵', 17: '🍷', 18: '🥤', 19: '🍺', 20: '💧', 21: '💧', 22: '🛎️' };
 const menuIllustrations = {
   3: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><path d="M19 59h51c8 0 13 5 13 12v5H20c-8 0-12-4-12-9s4-8 11-8Z" fill="#8b603d"/><path d="M22 56c1-18 14-31 33-31h20v16H57c-9 0-14 5-16 15l-2 8H22Z" fill="#e7c18d" stroke="#765034" stroke-width="4" stroke-linejoin="round"/><path d="M59 25v-9h17v9M27 76v6m48-6v6" stroke="#765034" stroke-width="4" stroke-linecap="round"/><path d="M30 49c4-7 9-11 16-13" stroke="#fff2dc" stroke-width="4" stroke-linecap="round"/></svg>',
   4: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><path d="m22 39 24-14 25 14-7 18-23 4-19-12Z" fill="#7c9da0" stroke="#49666a" stroke-width="4" stroke-linejoin="round"/><path d="m60 40 20 5 2 12-20 1Z" fill="#d2a46f" stroke="#765034" stroke-width="4" stroke-linejoin="round"/><path d="m35 57-10 20h18l12-20m-47-5-8-2m8 12-7 2m7-24-6-4" stroke="#765034" stroke-width="4" stroke-linecap="round"/><circle cx="33" cy="39" r="4" fill="#fff2dc"/></svg>',
@@ -219,7 +221,7 @@ async function init() {
   const rawRoom = params.get('room') || params.get('table');
   const digits = rawRoom ? rawRoom.replace(/\D/g, '') : '';
   const roomNum = Number(digits);
-  currentTable = digits ? `Phòng ${roomNum}` : null;
+  currentTable = digits && roomNum >= 100 && roomNum <= 999 ? `Phòng ${roomNum}` : null;
 
   const selectedView = location.hash === '#foodSection' ? 'housekeeping' : location.hash === '#drinkSection' ? 'dining' : '';
   document.body.dataset.serviceView = selectedView;
@@ -241,6 +243,8 @@ async function init() {
   });
   
   const welcomeText = document.querySelector('.welcome-banner p');
+  const welcomeTitle = document.getElementById('guestWelcomeTitle');
+  if (welcomeTitle) welcomeTitle.textContent = currentTable ? `👋 Xin chào quý khách - ${currentTable}` : '👋 Kính chào quý khách!';
   if (welcomeText) {
     welcomeText.innerHTML = currentTable
       ? `Chào mừng quý khách đang lưu trú tại <b>${currentTable}</b>. Vui lòng chọn dịch vụ buồng phòng hoặc ẩm thực bên dưới.`
