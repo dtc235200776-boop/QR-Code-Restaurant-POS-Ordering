@@ -28,9 +28,20 @@ let MENU_ITEMS = [
 
 let cart = {};
 let currentTable = null; // Số phòng (ví dụ: Phòng 101)
+let currentStayToken = '';
+let currentPin = '';
 const API_BASE = '';
 const apiUrl = path => `${API_BASE}${path}`;
 const money = value => Number(value || 0) === 0 ? 'Miễn phí' : `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+
+// Hàm tạo URL mã VietQR chuẩn ngân hàng
+function getVietQrUrl(amount, memo) {
+  const bank = 'MB';
+  const accountNo = '0901234567';
+  const accountName = 'GRAND CLOUD HOTEL';
+  const cleanMemo = encodeURIComponent(String(memo || '').replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 50));
+  return `https://img.vietqr.io/image/${bank}-${accountNo}-compact2.png?amount=${Math.round(amount)}&addInfo=${cleanMemo}&accountName=${encodeURIComponent(accountName)}`;
+}
 const itemIcons = { 1: '🧹', 2: '🧺', 3: '♨️', 4: '💨', 5: '🧺', 6: '👗', 7: '🛵', 8: '🚘', 9: '🍳', 10: '🍜', 11: '🥩', 12: '🍝', 13: '🥪', 14: '🍉', 15: '☕', 16: '🍵', 17: '🍷', 18: '🥤', 19: '🍺', 20: '💧', 21: '💧', 22: '🛎️' };
 const menuIllustrations = {
   3: '<svg class="menu-illustration" viewBox="0 0 100 100" aria-hidden="true"><path d="M19 59h51c8 0 13 5 13 12v5H20c-8 0-12-4-12-9s4-8 11-8Z" fill="#8b603d"/><path d="M22 56c1-18 14-31 33-31h20v16H57c-9 0-14 5-16 15l-2 8H22Z" fill="#e7c18d" stroke="#765034" stroke-width="4" stroke-linejoin="round"/><path d="M59 25v-9h17v9M27 76v6m48-6v6" stroke="#765034" stroke-width="4" stroke-linecap="round"/><path d="M30 49c4-7 9-11 16-13" stroke="#fff2dc" stroke-width="4" stroke-linecap="round"/></svg>',
@@ -181,10 +192,19 @@ async function submitOrder() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ table: currentTable, items: entries.map(({ item, qty, note }) => ({ id: item.id, qty, note: note.trim() })) })
+      body: JSON.stringify({
+        table: currentTable,
+        token: currentStayToken,
+        pin: currentPin,
+        items: entries.map(({ item, qty, note }) => ({ id: item.id, qty, note: note.trim() }))
+      })
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
+      if (response.status === 403) {
+        document.getElementById('pinAuthModal')?.classList.add('active');
+        throw new Error(result.error || 'Cần xác thực mã PIN phòng để gọi dịch vụ.');
+      }
       throw new Error(result.error || 'Lỗi gửi API server');
     }
   } catch (error) {
@@ -203,16 +223,23 @@ async function submitOrder() {
 window.printReceipt = async id => {
   const order = (await getOrders()).find(row => row.id === id); if (!order) return;
   const receipt = document.getElementById('receiptPrint');
+  const amountToPay = order.amountPaid ?? order.totalPrice;
+  const qrUrl = getVietQrUrl(amountToPay, `THANHTOAN ${order.table} ${order.id}`);
   receipt.innerHTML = `
     <h2>Grand Cloud Hotel &amp; Resort</h2>
-    <p>${order.status === 'paid' ? 'HÓA ĐƠN DỊCH VỤ PHÒNG (CHECK-OUT)' : 'PHIẾU XÁC NHẬN DỊCH VỤ TẠI PHÒNG'} · ${escapeHtml(order.table)}</p>
+    <p>${order.status === 'paid' ? 'HÓA ĐƠN DỊCH VỤ PHÒNG (ĐÃ THANH TOÁN)' : 'PHIẾU XÁC NHẬN DỊCH VỤ TẠI PHÒNG'} · ${escapeHtml(order.table)}</p>
     <p>Mã yêu cầu: ${escapeHtml(order.id)} · ${new Date(order.createdAt).toLocaleString('vi-VN')}</p>
     <hr>${order.items.map(item => `<p>${item.qty} × ${escapeHtml(item.name)} ${money(item.total)}</p>${item.salePercent ? `<small>Ưu đãi phòng: -${item.salePercent}%</small>` : ''}${item.note ? `<small>Ghi chú: ${escapeHtml(item.note)}</small>` : ''}`).join('')}
     <hr>
     <p>Tạm tính dịch vụ: <b>${money(order.totalPrice)}</b></p>
     ${order.voucherDiscount ? `<p>Ưu đãi ${escapeHtml(order.voucherCode)}: -${money(order.voucherDiscount)}</p>` : ''}
-    <p>Tổng thanh toán: <b>${money(order.amountPaid ?? order.totalPrice)}</b></p>
-    <p>${order.status === 'paid' ? 'Đã thanh toán. Chúc quý khách kỳ nghỉ tuyệt vời!' : 'Khoản này sẽ được cộng vào hóa đơn phòng khi check-out.'}</p>`;
+    <p>Tổng thanh toán: <b>${money(amountToPay)}</b></p>
+    <div style="text-align:center; margin: 15px 0;">
+      <p style="font-weight:700; margin-bottom:5px; font-size:13px;">Mã VietQR chuyển khoản dịch vụ:</p>
+      <img src="${qrUrl}" alt="Mã VietQR chuyển khoản" style="width:160px; height:160px; border:1px solid #ddd; border-radius:8px; display:inline-block;">
+      <p style="font-size:11px; color:#555; margin-top:4px;">MBBank · STK: 0901234567 · GRAND CLOUD HOTEL</p>
+    </div>
+    <p>${order.status === 'paid' ? 'Đã thanh toán. Chúc quý khách kỳ nghỉ tuyệt vời!' : 'Quý khách có thể chuyển khoản bằng VietQR ở trên hoặc thanh toán khi check-out.'}</p>`;
   window.print();
 };
 
@@ -222,6 +249,7 @@ async function init() {
   const digits = rawRoom ? rawRoom.replace(/\D/g, '') : '';
   const roomNum = Number(digits);
   currentTable = digits && roomNum >= 100 && roomNum <= 999 ? `Phòng ${roomNum}` : null;
+  const urlToken = params.get('token') || sessionStorage.getItem(`room_token_${roomNum}`) || '';
 
   const selectedView = location.hash === '#foodSection' ? 'housekeeping' : location.hash === '#drinkSection' ? 'dining' : '';
   document.body.dataset.serviceView = selectedView;
@@ -256,7 +284,43 @@ async function init() {
   const badge = document.getElementById('tableBadge');
   if (badge) badge.classList.toggle('table-selected', Boolean(currentTable));
 
-  // Tải danh mục dịch vụ từ server hoặc dùng mẫu
+  // Xác thực bảo mật phòng qua Token hoặc PIN
+  if (currentTable) {
+    try {
+      const authRes = await fetch(apiUrl(`/api/room-auth?room=${roomNum}${urlToken ? `&token=${encodeURIComponent(urlToken)}` : ''}`));
+      if (authRes.ok) {
+        const authData = await authRes.json();
+        currentStayToken = authData.token || urlToken;
+        sessionStorage.setItem(`room_token_${roomNum}`, currentStayToken);
+      } else {
+        document.getElementById('pinAuthModal')?.classList.add('active');
+      }
+    } catch (_) {}
+  }
+
+  // Lắng nghe form nhập PIN phòng
+  document.getElementById('pinAuthForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const pinInput = document.getElementById('pinAuthInput');
+    const pinVal = pinInput ? pinInput.value.trim() : '';
+    const errBox = document.getElementById('pinAuthError');
+    try {
+      const res = await fetch(apiUrl(`/api/room-auth?room=${roomNum}&pin=${encodeURIComponent(pinVal)}`));
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Mã PIN phòng không chính xác.');
+      currentStayToken = data.token;
+      currentPin = pinVal;
+      sessionStorage.setItem(`room_token_${roomNum}`, data.token);
+      document.getElementById('pinAuthModal')?.classList.remove('active');
+    } catch (err) {
+      if (errBox) {
+        errBox.textContent = err.message;
+        errBox.hidden = false;
+      }
+    }
+  });
+
+  // Tải danh mục dịch vụ từ server
   try {
     const response = await fetch(apiUrl('/api/menu'));
     if (response.ok) {

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="runtime.js?v=20261103g"></script>
 </head>
+
 <body class="admin-body professional-admin">
   <header class="admin-header">
     <div class="admin-brand">
@@ -46,8 +48,15 @@
     </section>
 
     <section class="manager-workbench">
-      <div class="section-heading"><div><p class="eyebrow">VIỆC CẦN THEO DÕI</p><h2>Ưu tiên vận hành hôm nay</h2></div></div>
-      <ul id="managerTasks" class="manager-task-list"><li>Đang tổng hợp tình hình khách sạn…</li></ul>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">VIỆC CẦN THEO DÕI</p>
+          <h2>Ưu tiên vận hành hôm nay</h2>
+        </div>
+      </div>
+      <ul id="managerTasks" class="manager-task-list">
+        <li>Đang tổng hợp tình hình khách sạn…</li>
+      </ul>
     </section>
 
     <section class="admin-section">
@@ -66,7 +75,12 @@
     </section>
 
     <section class="admin-section inventory-section">
-      <div class="section-heading"><div><p class="eyebrow">TỒN KHO BUỒNG PHÒNG · BẾP · MINIBAR</p><h2>Hàng hóa cần bổ sung</h2></div><span id="inventoryLowCount" class="inventory-low-count">0 mặt hàng cần bổ sung</span></div>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">TỒN KHO BUỒNG PHÒNG · BẾP · MINIBAR</p>
+          <h2>Hàng hóa cần bổ sung</h2>
+        </div><span id="inventoryLowCount" class="inventory-low-count">0 mặt hàng cần bổ sung</span>
+      </div>
       <div id="inventoryAlerts" class="inventory-alerts"></div>
       <div id="inventoryGrid" class="inventory-grid"></div>
     </section>
@@ -112,7 +126,26 @@
     </section>
   </main>
 
+  <!-- Modal VietQR Quản lý & Thu ngân -->
+  <div id="cashierVietqrModal" class="guest-qr-backdrop" hidden>
+    <section class="guest-qr-dialog" role="dialog" aria-modal="true" style="max-width: 440px;">
+      <h2 id="cashierVietqrTitle">Mã VietQR chuyển khoản</h2>
+      <p id="cashierVietqrBank" style="margin-bottom: 4px; font-weight:700; color:#1e293b;">MBBank · STK: 0901234567 ·
+        GRAND CLOUD HOTEL</p>
+      <p id="cashierVietqrMemo" style="margin-bottom: 12px; font-size:12px; color:#64748b;"></p>
+      <img id="cashierVietqrImg" alt="VietQR Thanh toán">
+      <div style="margin: 12px 0 6px;">
+        <span style="font-size:13px; color:#64748b;">Số tiền thanh toán:</span>
+        <strong id="cashierVietqrAmount" style="font-size:20px; color:#b45309; display:block;"></strong>
+      </div>
+      <div class="guest-qr-actions">
+        <button id="closeCashierVietqrBtn" type="button">Đóng cửa sổ</button>
+      </div>
+    </section>
+  </div>
+
   <section id="receiptPrint" class="receipt-print"></section>
   <script src="admin.js"></script>
 </body>
+
 </html>

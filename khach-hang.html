@@ -133,6 +133,22 @@
     </div>
   </div>
 
+  <!-- Popup Xác thực PIN bảo mật phòng -->
+  <div class="modal-overlay" id="pinAuthModal">
+    <div class="modal-content text-center" style="max-width: 420px; border-radius: 18px; padding: 26px 20px;">
+      <div class="success-icon" style="background: #fef3c7; color: #b45309; margin-bottom: 12px;">🔒</div>
+      <h3 style="font-size: 20px; color: #493321; margin-bottom: 6px;">Bảo mật dịch vụ phòng</h3>
+      <p id="pinAuthDesc" style="color: #64748b; font-size: 13px; line-height: 1.5; margin-bottom: 18px;">
+        Vui lòng quét đúng mã QR tại phòng hoặc nhập <b>mã PIN phòng (4 số)</b> do tiếp tân cung cấp khi nhận phòng.
+      </p>
+      <form id="pinAuthForm" style="display: grid; gap: 12px;">
+        <input type="password" id="pinAuthInput" maxlength="6" inputmode="numeric" placeholder="Nhập PIN 4 số" style="height: 48px; font-size: 22px; text-align: center; letter-spacing: 8px; font-weight: 800; border: 2px solid #cbd5e1; border-radius: 10px; outline: none;" required>
+        <div id="pinAuthError" style="color: #dc2626; font-size: 13px; font-weight: 600;" hidden>Mã PIN không chính xác.</div>
+        <button type="submit" class="btn-primary" style="height: 46px; font-size: 15px; font-weight: 700; border-radius: 10px;">Xác nhận phòng</button>
+      </form>
+    </div>
+  </div>
+
   <section id="receiptPrint" class="receipt-print"></section>
 
   <script src="app.js"></script>

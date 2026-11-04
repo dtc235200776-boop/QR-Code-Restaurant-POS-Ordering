@@ -49,8 +49,12 @@ for ($attempt = 0; $attempt -lt 30 -and -not $readyPort; $attempt++) {
 }
 
 if ($readyPort) {
-    Write-Host "Mo trang chu tai http://localhost:$readyPort/"
-    Start-Process "http://localhost:$readyPort/"
+    Write-Host "Mo trang chu tai http://localhost:$readyPort/ tren Chrome..."
+    try {
+        Start-Process "chrome.exe" "http://localhost:$readyPort/"
+    } catch {
+        Start-Process "http://localhost:$readyPort/"
+    }
 } else {
     Write-Host 'May chu chua san sang. Kiem tra loi trong cua so Cloud POS Server.' -ForegroundColor Red
     exit 1

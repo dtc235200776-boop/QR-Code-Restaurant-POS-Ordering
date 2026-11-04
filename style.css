@@ -1009,3 +1009,28 @@ body[data-service-view="housekeeping"] #drinkSection, body[data-service-view="di
 .staff-portal-return:hover { background:#f1e4ca; }.staff-portal-return[hidden] { display:none !important; }
 @media(max-width:900px){.home-header-actions{margin-left:auto;flex-wrap:wrap}.staff-portal-return{font-size:9px;padding:9px 10px}}
 @media(max-width:640px){.home-header-actions{order:2}.home-book-link{margin-left:0}.staff-portal-return{font-size:9px}.reception-body{padding:16px 10px}}
+
+/* ==========================================================================
+   VietQR & Check-out Folio Styles
+   ========================================================================== */
+.btn-vietqr {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #0284c7;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-vietqr:hover {
+  background: #0369a1;
+}
+.folio-breakdown b {
+  color: #493321;
+}
+

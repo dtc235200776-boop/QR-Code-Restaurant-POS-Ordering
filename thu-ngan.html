@@ -57,7 +57,24 @@
       <div id="billsList" class="bills-list"></div>
     </section>
 
-</main>
+  </main>
+
+  <!-- Modal VietQR Thu ngân -->
+  <div id="cashierVietqrModal" class="guest-qr-backdrop" hidden>
+    <section class="guest-qr-dialog" role="dialog" aria-modal="true" style="max-width: 440px;">
+      <h2 id="cashierVietqrTitle">Mã VietQR chuyển khoản</h2>
+      <p id="cashierVietqrBank" style="margin-bottom: 4px; font-weight:700; color:#1e293b;">MBBank · STK: 0901234567 · GRAND CLOUD HOTEL</p>
+      <p id="cashierVietqrMemo" style="margin-bottom: 12px; font-size:12px; color:#64748b;"></p>
+      <img id="cashierVietqrImg" alt="VietQR Thanh toán">
+      <div style="margin: 12px 0 6px;">
+        <span style="font-size:13px; color:#64748b;">Số tiền thanh toán:</span>
+        <strong id="cashierVietqrAmount" style="font-size:20px; color:#b45309; display:block;"></strong>
+      </div>
+      <div class="guest-qr-actions">
+        <button id="closeCashierVietqrBtn" type="button">Đóng cửa sổ</button>
+      </div>
+    </section>
+  </div>
 
   <section id="receiptPrint" class="receipt-print"></section>
   <script src="admin.js"></script>

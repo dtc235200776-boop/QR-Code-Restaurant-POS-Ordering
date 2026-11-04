@@ -32,6 +32,31 @@ const SESSION_COOKIE = 'hotel_pos_staff';
 const sessions = new Map();
 const streams = new Set();
 
+// Cấu hình loại phòng & giá lưu trú theo đêm
+const ROOM_CONFIGS = {
+  standard: { type: 'standard', typeLabel: 'Phòng tiêu chuẩn', pricePerNight: 450000 },
+  deluxe: { type: 'deluxe', typeLabel: 'Phòng Deluxe', pricePerNight: 750000 },
+  suite: { type: 'suite', typeLabel: 'Phòng Suite', pricePerNight: 1200000 }
+};
+
+function getRoomDefaults(roomNumber) {
+  if (roomNumber <= 104) return ROOM_CONFIGS.standard;
+  if (roomNumber <= 108) return ROOM_CONFIGS.deluxe;
+  return ROOM_CONFIGS.suite;
+}
+
+// Công thức định mức trừ tồn kho tự động theo từng món dịch vụ
+const INVENTORY_RECIPES = {
+  1: [{ id: 'detergent', qty: 1 }, { id: 'linen', qty: 1 }],       // Dọn phòng & Đổi ga gối
+  2: [{ id: 'towels', qty: 2 }, { id: 'amenities', qty: 1 }],        // Bổ sung khăn tắm & Bộ vệ sinh
+  10: [{ id: 'pho', qty: 1 }, { id: 'beef', qty: 1 }],              // Phở bò
+  15: [{ id: 'coffee', qty: 1 }],                                   // Cà phê
+  18: [{ id: 'soft-drink', qty: 1 }],                               // Nước ngọt lon minibar
+  19: [{ id: 'beer', qty: 1 }],                                     // Bia lon minibar
+  20: [{ id: 'water', qty: 1 }],                                    // Nước khoáng minibar
+  21: [{ id: 'water', qty: 2 }]                                     // Bổ sung nước uống
+};
+
 const seedServices = [
   // 1. Dịch vụ buồng phòng & Tiện ích (Housekeeping & Amenities)
   { id: 1, section: 'housekeeping', category: 'cleaning', name: 'Yêu cầu dọn phòng & Đổi ga gối', price: 0, desc: 'Nhân viên buồng phòng sẽ đến hút bụi, dọn phòng và thay ga gối mới', icon: '🧹', salePercent: 0 },
@@ -72,7 +97,39 @@ const readStore = () => {
     if (menuChanged) writeStore(store);
   }
   if (!Array.isArray(store.reservations)) store.reservations = [];
-  if (!Array.isArray(store.rooms)) store.rooms = Array.from({ length: 12 }, (_, index) => ({ number: 101 + index, status: 'available', guestName: '', guestPhone: '', checkIn: '', plannedCheckout: '' }));
+  if (!Array.isArray(store.rooms)) {
+    store.rooms = Array.from({ length: 12 }, (_, index) => {
+      const num = 101 + index;
+      const def = getRoomDefaults(num);
+      return {
+        number: num,
+        type: def.type,
+        typeLabel: def.typeLabel,
+        pricePerNight: def.pricePerNight,
+        status: 'available',
+        guestName: '',
+        guestPhone: '',
+        checkIn: '',
+        plannedCheckout: '',
+        stayToken: '',
+        pin: ''
+      };
+    });
+  } else {
+    for (const room of store.rooms) {
+      const def = getRoomDefaults(room.number);
+      if (!room.type) room.type = def.type;
+      if (!room.typeLabel) room.typeLabel = def.typeLabel;
+      if (!room.pricePerNight) room.pricePerNight = def.pricePerNight;
+      if (room.status === 'occupied') {
+        if (!room.stayToken) room.stayToken = crypto.randomBytes(4).toString('hex').toUpperCase();
+        if (!room.pin) room.pin = String(1000 + (room.number % 9000));
+      } else {
+        if (room.stayToken) room.stayToken = '';
+        if (room.pin) room.pin = '';
+      }
+    }
+  }
   if (!Array.isArray(store.inventory)) store.inventory = seedInventory.map(item => ({ ...item }));
   return store;
 };
@@ -141,12 +198,46 @@ const server = http.createServer(async (req, res) => {
       res.write('retry: 3000\n\n'); const client = { res, staff, table }; streams.add(client); const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 20000);
       req.on('close', () => { clearInterval(heartbeat); streams.delete(client); }); return;
     }
+    if (req.method === 'GET' && url.pathname === '/api/room-auth') {
+      const roomNumber = Number(url.searchParams.get('room'));
+      const token = String(url.searchParams.get('token') || '').trim();
+      const pin = String(url.searchParams.get('pin') || '').trim();
+      const store = readStore();
+      const room = store.rooms.find(item => item.number === roomNumber);
+      if (!room) return sendJson(res, 404, { valid: false, error: 'Không tìm thấy phòng trong hệ thống.' });
+      if (room.status !== 'occupied') return sendJson(res, 409, { valid: false, error: 'Phòng hiện chưa nhận khách hoặc đang chờ buồng phòng dọn dẹp.' });
+
+      const tokenMatch = Boolean(token && room.stayToken && token.toUpperCase() === room.stayToken.toUpperCase());
+      const pinMatch = Boolean(pin && room.pin && pin === room.pin);
+      if (tokenMatch || pinMatch) {
+        return sendJson(res, 200, {
+          valid: true,
+          room: room.number,
+          guestName: room.guestName,
+          typeLabel: room.typeLabel || 'Phòng tiêu chuẩn',
+          token: room.stayToken
+        });
+      }
+      return sendJson(res, 403, { valid: false, error: 'Mã xác thực phòng (Token/PIN) không chính xác.' });
+    }
     if (req.method === 'POST' && url.pathname === '/api/orders') {
       const body = await readBody(req); const table = String(body.table || '').trim();
       if (!table || !Array.isArray(body.items) || !body.items.length) return sendJson(res, 400, { error: 'Số phòng hoặc danh sách dịch vụ không hợp lệ.' });
       const store = readStore(); const items = [];
       const roomNumber = Number(table.replace(/\D/g, '')); const room = store.rooms.find(item => item.number === roomNumber);
       if (!room || room.status !== 'occupied') return sendJson(res, 409, { error: 'Phòng chưa được tiếp tân làm thủ tục nhận phòng hoặc đang chờ dọn dẹp.' });
+
+      // Bảo mật QR: Kiểm tra Token hoặc PIN phòng nếu là khách gửi đơn (nhân viên không cần check)
+      if (!isStaff(req)) {
+        const token = String(body.token || '').trim();
+        const pin = String(body.pin || '').trim();
+        const tokenMatch = Boolean(token && room.stayToken && token.toUpperCase() === room.stayToken.toUpperCase());
+        const pinMatch = Boolean(pin && room.pin && pin === room.pin);
+        if (!tokenMatch && !pinMatch) {
+          return sendJson(res, 403, { error: 'Xác thực phòng không hợp lệ hoặc phiên phòng đã hết hạn. Vui lòng quét lại mã QR tại phòng hoặc nhập đúng mã PIN.' });
+        }
+      }
+
       for (const row of body.items) {
         const menuItem = store.menu.find(item => item.id === Number(row.id) && item.available !== false);
         const qty = Math.max(1, Math.min(50, Number(row.qty) || 1));
@@ -154,6 +245,23 @@ const server = http.createServer(async (req, res) => {
         const unitPrice = Math.round(menuItem.price * (100 - (menuItem.salePercent || 0)) / 100);
         items.push({ id: menuItem.id, name: menuItem.name, section: menuItem.section, category: menuItem.category, qty, note: String(row.note || '').slice(0, 120), listPrice: menuItem.price, salePercent: menuItem.salePercent || 0, unitPrice, total: unitPrice * qty });
       }
+
+      // Tự động trừ tồn kho theo định mức của từng dịch vụ/món
+      if (Array.isArray(store.inventory)) {
+        for (const item of items) {
+          const recipe = INVENTORY_RECIPES[item.id];
+          if (recipe) {
+            for (const ing of recipe) {
+              const inv = store.inventory.find(i => i.id === ing.id);
+              if (inv) {
+                inv.quantity = Math.max(0, inv.quantity - (ing.qty * item.qty));
+                inv.updatedAt = new Date().toISOString();
+              }
+            }
+          }
+        }
+      }
+
       const subtotal = items.reduce((sum, item) => sum + item.total, 0); const promotionDiscount = items.reduce((sum, item) => sum + Math.round(item.listPrice * item.qty * item.salePercent / 100), 0);
       const order = { id: `SRV-${Date.now().toString().slice(-7)}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`, table, items, subtotal, promotionDiscount, voucherCode: '', voucherDiscount: 0, discountTotal: promotionDiscount, totalPrice: subtotal, createdAt: new Date().toISOString(), status: 'pending', stations: { housekeeping: items.some(item => item.section === 'housekeeping') ? 'pending' : null, dining: items.some(item => item.section === 'dining') ? 'pending' : null } };
       store.orders.unshift(order); writeStore(store); broadcast(order); return sendJson(res, 201, { order });
@@ -162,6 +270,63 @@ const server = http.createServer(async (req, res) => {
       if (!canAccess(getRole(req), ['receptionist', 'housekeeping'])) return sendJson(res, getRole(req) ? 403 : 401, { error: 'Chỉ nhân viên lễ tân, buồng phòng hoặc quản lý được xem tình trạng phòng.' });
       return sendJson(res, 200, { rooms: readStore().rooms });
     }
+    const roomBillRoute = url.pathname.match(/^\/api\/rooms\/(\d+)\/bill$/);
+    if (req.method === 'GET' && roomBillRoute) {
+      if (!canAccess(getRole(req), ['receptionist', 'cashier', 'manager'])) return sendJson(res, getRole(req) ? 403 : 401, { error: 'Chỉ nhân viên lễ tân, thu ngân hoặc quản lý được xem hóa đơn phòng.' });
+      const roomNumber = Number(roomBillRoute[1]);
+      const store = readStore();
+      const room = store.rooms.find(item => item.number === roomNumber);
+      if (!room) return sendJson(res, 404, { error: 'Không tìm thấy phòng.' });
+
+      const today = new Date().toISOString().slice(0, 10);
+      const checkInDate = room.checkIn || today;
+      const checkOutDate = room.plannedCheckout || today;
+      const d1 = new Date(`${checkInDate}T12:00:00`);
+      const d2 = new Date(`${checkOutDate}T12:00:00`);
+      const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+      const nights = isNaN(diffDays) || diffDays < 1 ? 1 : diffDays;
+      const def = getRoomDefaults(room.number);
+      const pricePerNight = room.pricePerNight || def.pricePerNight;
+      const roomTotal = nights * pricePerNight;
+
+      const roomOrders = store.orders.filter(order => order.table === `Phòng ${room.number}`);
+      const unpaidOrders = roomOrders.filter(order => order.status !== 'paid');
+      const paidOrders = roomOrders.filter(order => order.status === 'paid');
+
+      const servicesTotal = roomOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+      const servicesUnpaid = unpaidOrders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+      const servicesPaid = paidOrders.reduce((sum, order) => sum + (order.amountPaid ?? order.totalPrice), 0);
+
+      const grandTotal = roomTotal + servicesTotal;
+      const amountDue = roomTotal + servicesUnpaid;
+
+      return sendJson(res, 200, {
+        room: {
+          number: room.number,
+          guestName: room.guestName,
+          guestPhone: room.guestPhone,
+          type: room.type || def.type,
+          typeLabel: room.typeLabel || def.typeLabel,
+          checkIn: checkInDate,
+          plannedCheckout: checkOutDate,
+          nights,
+          pricePerNight,
+          roomTotal,
+          pin: room.pin,
+          stayToken: room.stayToken
+        },
+        orders: roomOrders,
+        unpaidOrders,
+        paidOrders,
+        servicesTotal,
+        servicesUnpaid,
+        servicesPaid,
+        grandTotal,
+        amountDue,
+        canCheckOut: unpaidOrders.every(o => ['ready', 'served'].includes(o.status))
+      });
+    }
+
     const roomRoute = url.pathname.match(/^\/api\/rooms\/(\d+)$/);
     if (req.method === 'PATCH' && roomRoute) {
       const role = getRole(req); if (!role) return sendJson(res, 401, { error: 'Cần đăng nhập nhân viên khách sạn.' });
@@ -175,15 +340,35 @@ const server = http.createServer(async (req, res) => {
         const today = new Date().toISOString().slice(0, 10);
         const reservation = store.reservations.find(row => ['pending', 'confirmed'].includes(String(row.status).toLowerCase()) && row.phone === guestPhone && row.checkOut === plannedCheckout && row.checkIn <= today);
         if (reservation) { reservation.status = 'checked_in'; reservation.roomNumber = room.number; reservation.updatedAt = new Date().toISOString(); room.reservationId = reservation.id; }
-        room.status = 'occupied'; room.guestName = guestName; room.guestPhone = guestPhone; room.checkIn = today; room.plannedCheckout = plannedCheckout; room.updatedAt = new Date().toISOString();
+        
+        // Sinh Session Token & Mã PIN bảo mật phòng
+        const stayToken = crypto.randomBytes(4).toString('hex').toUpperCase();
+        const pin = String(crypto.randomInt(1000, 9999));
+        room.status = 'occupied'; room.guestName = guestName; room.guestPhone = guestPhone; room.checkIn = today; room.plannedCheckout = plannedCheckout;
+        room.stayToken = stayToken; room.pin = pin; room.updatedAt = new Date().toISOString();
       } else if (body.action === 'check_out') {
         if (!canAccess(role, ['receptionist'])) return sendJson(res, 403, { error: 'Chỉ lễ tân hoặc quản lý được làm thủ tục trả phòng.' });
         if (room.status !== 'occupied') return sendJson(res, 409, { error: 'Phòng hiện không có khách để trả phòng.' });
         const unpaidOrders = store.orders.filter(order => order.table === `Phòng ${room.number}` && order.status !== 'paid');
-        if (unpaidOrders.length) return sendJson(res, 409, { error: 'Chưa thể trả phòng: còn hóa đơn dịch vụ chưa thanh toán hoặc bộ phận chưa hoàn tất. Lễ tân hãy kiểm tra và xác nhận thanh toán trước.' });
+        
+        // Hỗ trợ quyết toán gộp tiền dịch vụ và tiền phòng khi check-out
+        if (body.settleAll) {
+          const unready = unpaidOrders.filter(o => !['ready', 'served'].includes(o.status));
+          if (unready.length) return sendJson(res, 409, { error: `Còn ${unready.length} dịch vụ đang chế biến / dọn dẹp, chưa hoàn tất phục vụ.` });
+          for (const order of unpaidOrders) {
+            order.status = 'paid';
+            order.paidAt = new Date().toISOString();
+            order.amountPaid = order.totalPrice;
+            order.voucherCode = order.voucherCode || 'CHECKOUT';
+            updateOrder(store, order);
+          }
+        } else if (unpaidOrders.length) {
+          return sendJson(res, 409, { error: 'Chưa thể trả phòng: còn hóa đơn dịch vụ chưa thanh toán hoặc bộ phận chưa hoàn tất. Lễ tân hãy kiểm tra và xác nhận thanh toán trước.' });
+        }
         room.status = 'cleaning'; room.lastGuestName = room.guestName; room.lastCheckOut = new Date().toISOString();
         const reservation = store.reservations.find(row => row.id === room.reservationId); if (reservation) { reservation.status = 'completed'; reservation.updatedAt = new Date().toISOString(); }
-        room.reservationId = ''; room.guestName = ''; room.guestPhone = ''; room.checkIn = ''; room.plannedCheckout = ''; room.updatedAt = new Date().toISOString();
+        room.reservationId = ''; room.guestName = ''; room.guestPhone = ''; room.checkIn = ''; room.plannedCheckout = '';
+        room.stayToken = ''; room.pin = ''; room.updatedAt = new Date().toISOString();
       } else if (body.action === 'cleaned') {
         if (!canAccess(role, ['housekeeping'])) return sendJson(res, 403, { error: 'Chỉ buồng phòng hoặc quản lý được xác nhận phòng đã dọn.' });
         if (room.status !== 'cleaning') return sendJson(res, 409, { error: 'Phòng này không nằm trong hàng đợi dọn phòng.' });
@@ -280,10 +465,13 @@ const server = http.createServer(async (req, res) => {
       if (!room && roomNumber >= 100 && roomNumber <= 999) { room = { number: roomNumber, status: 'available', guestName: '', guestPhone: '', checkIn: '', plannedCheckout: '' }; store.rooms.push(room); }
       if (!room) return sendJson(res, 400, { error: 'Số phòng phải từ 100 đến 999.' });
       if (room.status !== 'available') return sendJson(res, 409, { error: `Phòng ${roomNumber} không còn trống. Hãy tải lại sơ đồ và chọn phòng khác.` });
+      const stayToken = crypto.randomBytes(4).toString('hex').toUpperCase();
+      const pin = String(crypto.randomInt(1000, 9999));
       room.status = 'occupied'; room.guestName = reservation.guestName; room.guestPhone = reservation.phone;
-      room.checkIn = today; room.plannedCheckout = reservation.checkOut; room.reservationId = reservation.id; room.updatedAt = new Date().toISOString();
+      room.checkIn = today; room.plannedCheckout = reservation.checkOut; room.reservationId = reservation.id;
+      room.stayToken = stayToken; room.pin = pin; room.updatedAt = new Date().toISOString();
       reservation.status = 'CHECKED_IN'; reservation.roomNumber = roomNumber; reservation.checkedInAt = new Date().toISOString(); reservation.updatedAt = reservation.checkedInAt;
-      reservation.serviceUrl = `/khach-hang.html?room=${roomNumber}`;
+      reservation.serviceUrl = `/khach-hang.html?room=${roomNumber}&token=${stayToken}`;
       writeStore(store);
       return sendJson(res, 200, { reservation, room, serviceUrl: reservation.serviceUrl });
     }

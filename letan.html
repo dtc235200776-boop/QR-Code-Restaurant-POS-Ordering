@@ -393,6 +393,7 @@
   <div id="guestQrBackdrop" class="guest-qr-backdrop" hidden>
     <section class="guest-qr-dialog" role="dialog" aria-modal="true" aria-labelledby="guestQrTitle">
       <h2 id="guestQrTitle">Mã QR dịch vụ phòng</h2><p>Đưa mã này cho khách quét để gọi dịch vụ tại phòng.</p>
+      <div id="guestQrPinDesc"></div>
       <img id="guestQrImage" alt="Mã QR dịch vụ phòng">
       <div class="guest-qr-actions"><a id="guestQrOpenLink" href="#" target="_blank" rel="noopener">Mở thử trang khách</a><button id="closeGuestQr" type="button">Xong · quay lại sơ đồ phòng</button></div>
     </section>
@@ -405,290 +406,39 @@
     </section>
   </div>
 
-  <script>
-    const DEFAULT_LAN_IP = location.hostname;
-    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-    const money = value => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
-    let receptionOrders = [];
+  <!-- Modal Hóa đơn Quyết toán Check-out Tổng hợp (Phòng + Dịch vụ + VietQR) -->
+  <div id="checkoutFolioBackdrop" class="booking-confirm-backdrop" hidden>
+    <section class="booking-confirm-card" role="dialog" aria-modal="true" aria-labelledby="checkoutFolioTitle" style="max-width: 540px;">
+      <h2 id="checkoutFolioTitle">Quyết toán trả phòng (Check-out)</h2>
+      <p>Tổng hợp tiền phòng lưu trú, các dịch vụ ăn uống &amp; tiện ích kèm mã VietQR.</p>
+      <div id="checkoutFolioDetails"></div>
+      <div class="booking-confirm-actions" style="margin-top: 14px; display:flex; flex-wrap:wrap; gap:8px;">
+        <button type="button" id="cancelCheckoutFolioBtn" style="flex:1;">Đóng</button>
+        <button type="button" id="printCheckoutFolioBtn" style="background:#0284c7; color:#fff; flex:1;">🖨️ In hóa đơn</button>
+        <button type="button" id="confirmSettleCheckoutBtn" style="background:#15803d; color:#fff; flex:1.5;">✓ Xác nhận quyết toán gộp &amp; Trả phòng</button>
+      </div>
+    </section>
+  </div>
 
-    async function loadReceptionOrders() {
-      const target = document.getElementById('receptionBillsList');
-      try {
-        const response = await fetch('/api/orders', { credentials:'include', cache:'no-store' });
-        const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Không tải được hóa đơn.');
-        receptionOrders = data.orders;
-        const unpaid = receptionOrders.filter(order => order.status !== 'paid');
-        target.innerHTML = unpaid.length ? unpaid.map(order => {
-          const ready = ['ready','served'].includes(order.status);
-          const state = ready ? 'Dịch vụ đã hoàn tất · có thể thu tiền' : 'Đang chờ bếp / buồng phòng hoàn tất';
-          return `<article class="reception-bill"><header><div><strong>${escapeHtml(order.table)}</strong><small>#${escapeHtml(order.id)} · ${new Date(order.createdAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})}</small></div><b>${money(order.totalPrice)}</b></header><ul>${order.items.map(item => `<li>${item.qty} × ${escapeHtml(item.name)}</li>`).join('')}</ul><small>${state}</small><footer><span>${ready ? 'Chờ xác nhận thu' : 'Chưa thể thanh toán'}</span><button data-reception-pay="${escapeHtml(order.id)}" ${ready ? '' : 'disabled'}>Xác nhận đã thu</button></footer></article>`;
-        }).join('') : '<p>Không còn hóa đơn dịch vụ chờ thu.</p>';
-      } catch (error) { target.textContent = error.message; }
-    }
+  <!-- Modal VietQR Thanh toán nhanh -->
+  <div id="vietqrBackdrop" class="guest-qr-backdrop" hidden>
+    <section class="guest-qr-dialog" role="dialog" aria-modal="true" aria-labelledby="vietqrTitle" style="max-width: 440px;">
+      <h2 id="vietqrTitle">Mã VietQR chuyển khoản</h2>
+      <p id="vietqrBankText" style="margin-bottom: 4px; font-weight:700; color:#1e293b;"></p>
+      <p id="vietqrMemoText" style="margin-bottom: 12px; font-size:12px; color:#64748b;"></p>
+      <img id="vietqrImage" alt="Mã VietQR chuyển khoản">
+      <div style="margin: 12px 0 6px;">
+        <span style="font-size:13px; color:#64748b;">Số tiền cần chuyển:</span>
+        <strong id="vietqrAmountText" style="font-size:20px; color:#b45309; display:block;"></strong>
+      </div>
+      <div class="guest-qr-actions">
+        <button id="closeVietQrBtn" type="button">Đóng cửa sổ</button>
+      </div>
+    </section>
+  </div>
 
-    document.getElementById('receptionBillsList').addEventListener('click', async event => {
-      const button = event.target.closest('[data-reception-pay]'); if (!button) return;
-      button.disabled = true;
-      try {
-        const response = await fetch(`/api/orders/${encodeURIComponent(button.dataset.receptionPay)}/pay`, { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({voucherCode:''}) });
-        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không thể xác nhận thanh toán.');
-        await loadReceptionOrders(); await loadRooms();
-      } catch (error) { alert(error.message); button.disabled = false; }
-    });
+  <section id="receiptPrint" class="receipt-print"></section>
 
-    async function loadReservations() {
-      const target = document.getElementById('reservationList');
-      try {
-        const response = await fetch('/api/reservations', { credentials: 'include', cache: 'no-store' });
-        if (!response.ok) throw new Error('Không tải được yêu cầu đặt phòng.');
-        const data = await response.json();
-        const statuses = { pending: 'Chờ xác nhận', confirmed: 'Đã xác nhận', checked_in: 'Khách đã nhận phòng', completed: 'Đã trả phòng', rejected: 'Đã từ chối', cancelled: 'Đã hủy' };
-        target.innerHTML = data.reservations.length ? data.reservations.map(row => `
-          <article class="reservation-row"><div><strong>${escapeHtml(row.guestName)} · ${escapeHtml(row.phone)}</strong>
-          <small>${escapeHtml(row.email || 'Chưa có email')} · ${escapeHtml(row.roomTypeLabel || row.roomType || 'Chưa chọn loại phòng')}</small>
-          <small>${escapeHtml(row.checkIn)} → ${escapeHtml(row.checkOut)} · ${row.guests} khách · ${escapeHtml(row.id)}</small>
-          <small>Trạng thái: ${statuses[String(row.status).toLowerCase()] || escapeHtml(row.status)}</small></div>
-          ${['pending','confirmed'].includes(String(row.status).toLowerCase()) ? `<div class="reservation-actions">${String(row.status).toLowerCase() === 'pending' ? `<button data-reservation="${escapeHtml(row.id)}" data-status="confirmed">Xác nhận</button><button data-reservation="${escapeHtml(row.id)}" data-status="rejected">Từ chối</button>` : ''}<button data-checkin-booking="${escapeHtml(row.id)}">Check-in</button></div>` : ''}</article>`).join('') : 'Chưa có yêu cầu đặt phòng mới.';
-      } catch (error) { target.textContent = error.message; }
-    }
-    document.getElementById('reservationList').addEventListener('click', async event => {
-      const checkin = event.target.closest('[data-checkin-booking]'); if (checkin) { document.getElementById('bookingIdInput').value = checkin.dataset.checkinBooking; await lookupBooking(checkin.dataset.checkinBooking); return; }
-      const button = event.target.closest('[data-reservation]'); if (!button) return;
-      button.disabled = true;
-      try {
-        const response = await fetch(`/api/reservations/${encodeURIComponent(button.dataset.reservation)}`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: button.dataset.status }) });
-        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không thể cập nhật yêu cầu.');
-        await loadReservations();
-      } catch (error) { alert(error.message); button.disabled = false; }
-    });
-
-    const bookingIdInput = document.getElementById('bookingIdInput');
-    const bookingScanStatus = document.getElementById('bookingScanStatus');
-    const bookingCamera = document.getElementById('bookingCamera');
-    const bookingConfirmBackdrop = document.getElementById('bookingConfirmBackdrop');
-    const bookingCheckinForm = document.getElementById('bookingCheckinForm');
-    let selectedBookingId = '';
-    let bookingCameraStream = null;
-    let bookingScannerTimer = null;
-    function parseBookingId(rawValue) {
-      const value = String(rawValue || '').trim();
-      try { const url = new URL(value); return url.searchParams.get('booking') || value.match(/BK-\d{4}-\d+/i)?.[0] || ''; }
-      catch (_) { return value.match(/BK-\d{4}-\d+/i)?.[0] || ''; }
-    }
-    async function lookupBooking(rawValue = bookingIdInput.value) {
-      const bookingId = parseBookingId(rawValue);
-      if (!bookingId) { bookingScanStatus.textContent = 'Mã không hợp lệ. Hãy nhập mã BK-năm-số hoặc quét QR đặt phòng.'; return; }
-      bookingIdInput.value = bookingId; bookingScanStatus.textContent = `Đang tra cứu ${bookingId}…`;
-      try {
-        const response = await fetch(`/api/reservations/${encodeURIComponent(bookingId)}`, { credentials:'include', cache:'no-store' });
-        const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Không tìm thấy booking.');
-        const reservation = data.reservation;
-        if (!['pending','confirmed'].includes(String(reservation.status).toLowerCase())) throw new Error(`Booking này đang ở trạng thái ${reservation.status}; không thể Check-in.`);
-        const roomsResponse = await fetch('/api/rooms', { credentials:'include', cache:'no-store' }); const roomsData = await roomsResponse.json();
-        if (!roomsResponse.ok) throw new Error(roomsData.error || 'Không tải được danh sách phòng.');
-        const available = roomsData.rooms.filter(room => room.status === 'available');
-        if (!available.length) throw new Error('Hiện không có phòng trống để gán.');
-        selectedBookingId = reservation.id;
-        document.getElementById('bookingConfirmDetails').innerHTML = `<strong>${escapeHtml(reservation.guestName)} · ${escapeHtml(reservation.phone)}</strong><span>${escapeHtml(reservation.email || 'Không có email')}</span><span>${escapeHtml(reservation.roomTypeLabel || reservation.roomType || 'Chưa chọn loại phòng')} · ${reservation.guests || 1} khách</span><span>${escapeHtml(reservation.checkIn)} → ${escapeHtml(reservation.checkOut)} · Booking ${escapeHtml(reservation.id)}</span><span>Trạng thái: ${String(reservation.status).toUpperCase()}</span>`;
-        document.getElementById('bookingRoomSelect').innerHTML = `${available.map(room => `<option value="${room.number}">Phòng ${room.number} · Trống</option>`).join('')}<option value="custom">Nhập số phòng khác…</option>`;
-        document.getElementById('customRoomWrap').hidden = true; document.getElementById('customRoomNumber').value = '';
-        bookingConfirmBackdrop.hidden = false; bookingScanStatus.textContent = 'Đã tìm thấy booking. Kiểm tra thông tin khách và xác nhận phòng.';
-        document.getElementById('bookingRoomSelect').focus();
-      } catch (error) { bookingScanStatus.textContent = error.message; }
-    }
-    document.getElementById('lookupBookingButton').addEventListener('click', () => lookupBooking());
-    bookingIdInput.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); lookupBooking(); } });
-    document.getElementById('bookingRoomSelect').addEventListener('change', event => { document.getElementById('customRoomWrap').hidden = event.target.value !== 'custom'; if (event.target.value === 'custom') document.getElementById('customRoomNumber').focus(); });
-    document.getElementById('cancelBookingCheckin').addEventListener('click', () => { bookingConfirmBackdrop.hidden = true; selectedBookingId = ''; });
-    bookingConfirmBackdrop.addEventListener('click', event => { if (event.target === bookingConfirmBackdrop) { bookingConfirmBackdrop.hidden = true; selectedBookingId = ''; } });
-    bookingCheckinForm.addEventListener('submit', async event => {
-      event.preventDefault(); if (!selectedBookingId) return;
-      const button = bookingCheckinForm.querySelector('[type="submit"]'); button.disabled = true;
-      try {
-        const roomNumber = bookingCheckinForm.elements.roomNumber.value === 'custom' ? document.getElementById('customRoomNumber').value : bookingCheckinForm.elements.roomNumber.value;
-        if (!roomNumber) throw new Error('Hãy nhập số phòng thực tế.');
-        const response = await fetch(`/api/reservations/${encodeURIComponent(selectedBookingId)}/check-in`, { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ roomNumber }) });
-        const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Không thể hoàn tất Check-in.');
-        bookingConfirmBackdrop.hidden = true; selectedBookingId = ''; bookingCheckinForm.reset();
-        bookingScanStatus.textContent = `Đã Check-in ${result.reservation.id} vào Phòng ${result.room.number}. QR dịch vụ phòng đã sẵn sàng.`;
-        await loadReservations(); await loadRooms(); showRoomQr(result.room.number);
-      } catch (error) { bookingScanStatus.textContent = error.message; }
-      finally { button.disabled = false; }
-    });
-    function stopBookingCamera() {
-      if (bookingScannerTimer) clearTimeout(bookingScannerTimer); bookingScannerTimer = null;
-      if (bookingCameraStream) bookingCameraStream.getTracks().forEach(track => track.stop()); bookingCameraStream = null;
-      bookingCamera.srcObject = null; bookingCamera.hidden = true;
-      document.getElementById('startBookingScan').textContent = 'Quét QR bằng camera';
-    }
-    document.getElementById('startBookingScan').addEventListener('click', async event => {
-      if (bookingCameraStream) { stopBookingCamera(); bookingScanStatus.textContent = 'Đã dừng camera. Bạn vẫn có thể nhập Booking ID thủ công.'; return; }
-      if (!('BarcodeDetector' in window) || !navigator.mediaDevices?.getUserMedia) { bookingScanStatus.textContent = 'Trình duyệt chưa hỗ trợ quét QR camera. Hãy nhập Booking ID vào ô bên cạnh.'; return; }
-      const scanButton = event.currentTarget;
-      try {
-        const detector = new BarcodeDetector({ formats:['qr_code'] });
-        bookingCameraStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false });
-        bookingCamera.srcObject = bookingCameraStream; bookingCamera.hidden = false; await bookingCamera.play();
-        scanButton.textContent = 'Dừng quét'; bookingScanStatus.textContent = 'Hướng camera vào mã QR đặt phòng.';
-        const scan = async () => {
-          if (!bookingCameraStream) return;
-          try { const codes = await detector.detect(bookingCamera); const bookingId = codes.map(code => parseBookingId(code.rawValue)).find(Boolean); if (bookingId) { stopBookingCamera(); bookingIdInput.value = bookingId; await lookupBooking(bookingId); return; } }
-          catch (_) {}
-          bookingScannerTimer = setTimeout(scan, 350);
-        };
-        scan();
-      } catch (_) { stopBookingCamera(); bookingScanStatus.textContent = 'Không mở được camera. Hãy cấp quyền camera hoặc nhập Booking ID thủ công.'; }
-    });
-
-    const roomLabels = { available: 'Phòng trống', occupied: 'Đang lưu trú', cleaning: 'Chờ dọn phòng', maintenance: 'Đang bảo trì' };
-    const roomGrid = document.getElementById('roomStatusGrid');
-    const checkinBackdrop = document.getElementById('checkinBackdrop');
-    const checkinForm = document.getElementById('checkinForm');
-    function openCheckin(number) { checkinForm.elements.roomNumber.value = number; document.getElementById('checkinRoomLabel').textContent = `Phòng ${number} · nhập thông tin lưu trú`; const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1); checkinForm.elements.plannedCheckout.min = tomorrow.toISOString().slice(0,10); checkinForm.elements.plannedCheckout.value = checkinForm.elements.plannedCheckout.min; checkinBackdrop.hidden = false; checkinForm.elements.guestName.focus(); }
-    async function roomAction(number, action) { const response = await fetch(`/api/rooms/${number}`, { method:'PATCH', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action}) }); const result = await response.json(); if(!response.ok) throw new Error(result.error || 'Không thể cập nhật phòng.'); await loadRooms(); }
-    async function loadRooms() {
-      try {
-        const response = await fetch('/api/rooms', {credentials:'include',cache:'no-store'}); const data = await response.json(); if(!response.ok) throw new Error(data.error || 'Không tải được sơ đồ phòng.');
-        roomGrid.innerHTML = data.rooms.map(room => { const state = roomLabels[room.status] || room.status; const roomOrders = receptionOrders.filter(order => order.table === `Phòng ${room.number}`); const unpaid = roomOrders.filter(order => order.status !== 'paid'); const detail = room.status === 'occupied' ? `${escapeHtml(room.guestName)} · Trả ${escapeHtml(room.plannedCheckout)} · ${unpaid.length ? `Còn ${unpaid.length} hóa đơn chưa thu` : 'Dịch vụ đã thanh toán'}` : room.status === 'cleaning' && room.lastGuestName ? `Khách vừa trả: ${escapeHtml(room.lastGuestName)}` : 'Sẵn sàng phục vụ khách'; let actions = '';
-          if(room.status==='available') actions=`<div class="room-status-actions"><button class="primary" data-checkin="${room.number}">Nhận phòng</button><button data-room-action="maintenance" data-room="${room.number}">Bảo trì</button></div>`;
-          if(room.status==='occupied') actions=`<div class="room-status-actions"><button data-show-qr="${room.number}">Hiện QR cho khách</button><a class="qr-demo-link" href="${getRoomServiceUrl(room.number)}" target="_blank" rel="noopener">Mở dịch vụ khách</a><button class="primary" data-room-action="check_out" data-room="${room.number}" ${unpaid.length ? 'disabled title="Hãy xác nhận thanh toán hóa đơn dịch vụ trước"' : ''}>${unpaid.length ? 'Chờ thanh toán' : 'Trả phòng'}</button></div>`;
-          if(room.status==='maintenance') actions=`<div class="room-status-actions"><button data-room-action="maintenance_done" data-room="${room.number}">Đã sửa xong</button></div>`;
-          return `<article class="room-status-card ${room.status}"><h3>Phòng ${room.number}<span class="room-state">${state}</span></h3><p>${detail}</p>${actions}</article>`; }).join('');
-      } catch(error) { roomGrid.textContent=error.message; }
-    }
-    roomGrid.addEventListener('click', async event => { const checkin=event.target.closest('[data-checkin]'); if(checkin)return openCheckin(checkin.dataset.checkin); const qrButton=event.target.closest('[data-show-qr]'); if(qrButton){showRoomQr(qrButton.dataset.showQr);return;} const button=event.target.closest('[data-room-action]'); if(!button)return; button.disabled=true; try{await roomAction(button.dataset.room,button.dataset.roomAction)}catch(error){alert(error.message);button.disabled=false;} });
-    document.getElementById('cancelCheckin').addEventListener('click',()=>{checkinBackdrop.hidden=true;checkinForm.reset()});
-    checkinForm.addEventListener('submit',async event=>{event.preventDefault();const button=checkinForm.querySelector('[type="submit"]');button.disabled=true;const body=Object.fromEntries(new FormData(checkinForm));try{const response=await fetch(`/api/rooms/${body.roomNumber}`,{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,action:'check_in'})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Không thể nhận phòng.');checkinBackdrop.hidden=true;checkinForm.reset();await loadRooms();showRoomQr(body.roomNumber);}catch(error){alert(error.message)}finally{button.disabled=false}});
-
-    function getRoomServiceUrl(roomNumber) { const base = document.getElementById('baseUrl').value.trim() || `${location.origin}/khach-hang.html`; const url = new URL(base, location.origin); url.search = ''; url.searchParams.set('room', roomNumber); return url.href; }
-    function showRoomQr(roomNumber) {
-      const cards = [...document.querySelectorAll('.table-qr-card')];
-      cards.forEach(card => { card.hidden = !card.querySelector('.table-title')?.textContent.includes(String(roomNumber)); });
-      const selected = cards.find(card => !card.hidden);
-      const url = getRoomServiceUrl(roomNumber); const image = selected?.querySelector('.qr-img');
-      document.getElementById('guestQrTitle').textContent = `Mã QR dịch vụ · Phòng ${roomNumber}`;
-      document.getElementById('guestQrImage').src = image?.src || `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=220&margin=1`;
-      document.getElementById('guestQrOpenLink').href = url;
-      document.getElementById('guestQrBackdrop').hidden = false;
-      document.getElementById('closeGuestQr').focus();
-    }
-    async function closeGuestQr() { document.getElementById('guestQrBackdrop').hidden = true; document.querySelectorAll('.table-qr-card').forEach(card => card.hidden = false); await loadRooms(); document.getElementById('roomStatusGrid').scrollIntoView({behavior:'smooth',block:'start'}); }
-    document.getElementById('closeGuestQr').addEventListener('click', closeGuestQr);
-    document.getElementById('guestQrBackdrop').addEventListener('click', event => { if (event.target.id === 'guestQrBackdrop') closeGuestQr(); });
-    document.getElementById('frontdeskLogout').addEventListener('click', async () => { await fetch('/api/logout', {method:'POST', credentials:'include'}); location.replace('/bo-phan.html'); });
-
-    function checkHostWarning(urlStr) {
-      const alertBox = document.getElementById('ipAlertBox');
-      try {
-        const u = new URL(urlStr);
-        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
-          alertBox.className = 'alert-banner danger';
-          alertBox.style.display = 'block';
-          alertBox.innerHTML = `⚠️ <b>CHÚ Ý:</b> Địa chỉ <code>${u.hostname}</code> chỉ mở trên máy chủ, điện thoại khách sẽ không truy cập được. Hãy dùng địa chỉ LAN được máy chủ phát hiện hoặc tên miền HTTPS của khách sạn.`;
-        } else {
-          alertBox.className = 'alert-banner success';
-          alertBox.style.display = 'block';
-          alertBox.innerHTML = `✓ <b>Tuyệt vời:</b> Địa chỉ máy chủ hợp lệ (<code>${u.hostname}</code>). Điện thoại quét mã sẽ mở đúng phòng ngay!`;
-        }
-      } catch (_) {
-        alertBox.style.display = 'none';
-      }
-    }
-
-    function renderQRCodes() {
-      let baseUrl = document.getElementById('baseUrl').value.trim();
-      if (!baseUrl) return;
-      if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-        baseUrl = 'http://' + baseUrl;
-        document.getElementById('baseUrl').value = baseUrl;
-      }
-      localStorage.setItem('hotel_qr_base_url', baseUrl);
-      checkHostWarning(baseUrl);
-
-      const container = document.getElementById('tablesContainer');
-      container.innerHTML = "";
-
-      // Tạo QR cho 12 phòng: Phòng 101 đến Phòng 112
-      for (let i = 1; i <= 12; i++) {
-        const roomNum = 100 + i;
-        const sep = baseUrl.includes('?') ? '&' : '?';
-        const orderUrl = `${baseUrl}${sep}room=${roomNum}`;
-        const safeOrderUrl = orderUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const targetUrl = encodeURIComponent(orderUrl);
-        const qrApi = `https://quickchart.io/qr?text=${targetUrl}&size=180&margin=1`;
-
-        const card = document.createElement('div');
-        card.className = 'table-qr-card';
-        card.innerHTML = `
-          <div class="table-subtitle">Grand Cloud Hotel</div>
-          <div class="table-title">PHÒNG ${roomNum}</div>
-          <a href="${safeOrderUrl}" target="_blank" rel="noopener">
-            <img class="qr-img" src="${qrApi}" alt="Mã QR dịch vụ Phòng ${roomNum}" loading="lazy">
-          </a>
-          <div class="instruction">Quét mã bằng camera để gọi dịch vụ phòng</div>
-          <a class="qr-demo-link" href="${safeOrderUrl}" target="_blank" rel="noopener">Mở thử Phòng ${roomNum} →</a>
-          <div class="qr-dest-url">${orderUrl}</div>
-        `;
-        container.appendChild(card);
-      }
-    }
-
-    function applyCustomUrl() {
-      renderQRCodes();
-    }
-
-    function selectIp(ip) {
-      const input = document.getElementById('baseUrl');
-      try {
-        const appPort = location.port || '80';
-        const u = new URL(input.value || `${location.protocol}//${ip}${location.port ? `:${appPort}` : ''}/khach-hang.html`);
-        u.hostname = ip;
-        input.value = u.href;
-      } catch (_) {
-        const port = location.port || '80';
-        input.value = `http://${ip}:${port}/khach-hang.html`;
-      }
-      renderQRCodes();
-    }
-
-    function switchPort(port) {
-      const input = document.getElementById('baseUrl');
-      try {
-        const u = new URL(input.value || `http://${DEFAULT_LAN_IP}:${port}/khach-hang.html`);
-        u.port = port;
-        input.value = u.href;
-      } catch (_) {
-        input.value = `http://${DEFAULT_LAN_IP}:${port}/khach-hang.html`;
-      }
-      renderQRCodes();
-    }
-
-    window.addEventListener('DOMContentLoaded', async () => {
-      await loadReceptionOrders();
-      await loadRooms();
-      await loadReservations();
-      setInterval(async () => { await loadReceptionOrders(); await loadRooms(); }, 15000);
-      const input = document.getElementById('baseUrl');
-      let initialUrl = '';
-
-      try {
-        const res = await fetch('/api/network', { cache: 'no-store' });
-        if (res.ok) {
-          const network = await res.json();
-          if (network.url) initialUrl = network.url;
-        }
-      } catch (_) {}
-
-      if (!initialUrl) {
-        initialUrl = `${location.protocol}//${DEFAULT_LAN_IP}${location.port ? `:${location.port}` : ''}/khach-hang.html`;
-      }
-
-      const room = new URLSearchParams(location.search).get('room');
-      if (room) initialUrl = `${initialUrl.split('?')[0]}?room=${encodeURIComponent(room)}`;
-      input.value = initialUrl;
-      renderQRCodes();
-      if (room) showRoomQr(room);
-    });
-  </script>
+  <script src="letan.js?v=20261105"></script>
 </body>
 </html>
